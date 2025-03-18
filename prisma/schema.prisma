@@ -1,0 +1,382 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                 Int                 @id @default(autoincrement())
+  name               String
+  email              String              @unique
+  dob      DateTime
+  gender             Gender
+  profilePic String?
+  password_hash      String
+  role_id            Int?
+  created_at         DateTime            @default(now())
+  updated_at         DateTime            @default(now())
+   isVerified                Boolean  @default(false)
+  resetPasswordToken        String?  // Optional because it may not always be set
+  resetPasswordExpiresAt    DateTime?
+  verificationToken         String?  // Optional
+  verificationTokenExpiresAt DateTime?
+  role               Role?               @relation(fields: [role_id], references: [id])
+ // user_profile       UserProfile?        @relation(fields: [id], references: [user_id])
+  activities         Activity[]
+  workout_plans      WorkoutPlan[]
+  workout_logs       WorkoutLog[]
+  food_catalogue     FoodCatalogue[]
+  diet_plans         DietPlan[]
+  food_logs          FoodLog[]
+  ai_recommendations AiRecommendation[]
+  daily_progress     DailyProgress[]
+  sent_messages      Message[]           @relation("Sender")
+  received_messages  Message[]           @relation("Receiver")
+  notifications      Notification[]
+  orders             Order[]
+  cart               Cart[]
+  wishlist           Wishlist[]
+  api_keys           ApiKey[]
+
+  UserProfile UserProfile[]
+}
+
+model Role {
+  id        Int       @id @default(autoincrement())
+  role_name RoleType
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+  users     User[]
+  permissions Permission[]
+}
+
+model Permission {
+  id          Int       @id @default(autoincrement())
+  role_id     Int
+  permission  String
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @default(now())
+  role        Role      @relation(fields: [role_id], references: [id])
+}
+
+model UserProfile {
+  id            Int       @id @default(autoincrement())
+  user_id       Int       @unique
+  height        Float
+  weight        Float
+  blood_group   BloodGroup
+  activity_type ActivityType
+  goal          Goal
+  updated_at    DateTime  @default(now())
+  user          User      @relation(fields: [user_id], references: [id])
+}
+
+model Activity {
+  id    Int       @id @default(autoincrement())
+  user_id Int?
+  name  String    @unique
+  unit  ActivityUnit
+  user  User?     @relation(fields: [user_id], references: [id])
+
+  WorkoutPlanItem WorkoutPlanItem[]
+
+  WorkoutLog WorkoutLog[]
+}
+
+model WorkoutPlan {
+  id        Int       @id @default(autoincrement())
+  user_id   Int
+  start_date DateTime
+  end_date   DateTime
+  created_at DateTime @default(now())
+  user      User      @relation(fields: [user_id], references: [id])
+  items     WorkoutPlanItem[]
+}
+
+model WorkoutPlanItem {
+  id              Int       @id @default(autoincrement())
+  workout_plan_id Int
+  activity_id     Int
+  quantity        Float
+  status          WorkoutStatus @default(PENDING)
+  workout_plan    WorkoutPlan   @relation(fields: [workout_plan_id], references: [id])
+  activity        Activity      @relation(fields: [activity_id], references: [id])
+}
+
+model WorkoutLog {
+  id            Int       @id @default(autoincrement())
+  user_id       Int
+  date          DateTime
+  activity_id   Int
+  quantity      Float
+  calories_burned Float
+  user          User      @relation(fields: [user_id], references: [id])
+  activity      Activity  @relation(fields: [activity_id], references: [id])
+}
+
+model FoodCatalogue {
+  id          Int       @id @default(autoincrement())
+  user_id     Int?
+  name        String    @unique
+  calories    Int
+  carbs       Float
+  protein     Float
+  fats        Float
+  user        User?     @relation(fields: [user_id], references: [id])
+
+  DietPlanItem DietPlanItem[]
+
+  FoodLog FoodLog[]
+}
+
+model DietPlan {
+  id        Int       @id @default(autoincrement())
+  user_id   Int
+  start_date DateTime
+  end_date   DateTime
+  created_at DateTime @default(now())
+  user      User      @relation(fields: [user_id], references: [id])
+  items     DietPlanItem[]
+
+  AiRecommendation AiRecommendation[]
+}
+
+model DietPlanItem {
+  id          Int       @id @default(autoincrement())
+  diet_plan_id Int
+  meal_type   MealType
+  food_id     Int
+  quantity    Float
+  status      DietStatus @default(PENDING)
+  diet_plan   DietPlan   @relation(fields: [diet_plan_id], references: [id])
+  food        FoodCatalogue @relation(fields: [food_id], references: [id])
+}
+
+model FoodLog {
+  id        Int       @id @default(autoincrement())
+  user_id   Int
+  date      DateTime
+  food_id   Int
+  quantity  Float
+  user      User      @relation(fields: [user_id], references: [id])
+  food      FoodCatalogue @relation(fields: [food_id], references: [id])
+}
+
+model AiRecommendation {
+  id        Int       @id @default(autoincrement())
+  user_id   Int
+  type      RecommendationType
+  plan_id   Int
+  status    RecommendationStatus @default(PENDING)
+  user      User      @relation(fields: [user_id], references: [id])
+  plan      DietPlan  @relation(fields: [plan_id], references: [id])
+}
+
+model DailyProgress {
+  id             Int       @id @default(autoincrement())
+  user_id        Int
+  date           DateTime
+  calories_intake Float   @default(0)
+  calories_burned Float   @default(0)
+  protein_intake  Float   @default(0)
+  carbs_intake    Float   @default(0)
+  fats_intake     Float   @default(0)
+  steps_count     Int     @default(0)
+  water_intake    Float   @default(0)
+  goal_status     GoalStatus @default(ON_TRACK)
+  updated_at      DateTime @default(now())
+  user            User     @relation(fields: [user_id], references: [id])
+
+  @@unique([user_id, date])
+}
+
+model Message {
+  id         Int       @id @default(autoincrement())
+  sender_id  Int
+  receiver_id Int
+  content    String
+  status     MessageStatus @default(SENT)
+  created_at DateTime     @default(now())
+  sender     User         @relation("Sender", fields: [sender_id], references: [id])
+  receiver   User         @relation("Receiver", fields: [receiver_id], references: [id])
+}
+
+model Notification {
+  id        Int       @id @default(autoincrement())
+  user_id   Int
+  message   String
+  status    NotificationStatus @default(UNREAD)
+  created_at DateTime @default(now())
+  user      User      @relation(fields: [user_id], references: [id])
+}
+
+model Product {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  price       Decimal   @db.Decimal(10, 2)
+  stock       Int       @default(0)
+  category    String
+  image_url   String?
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @default(now())
+  order_items OrderItem[]
+  cart        Cart[]
+  wishlist    Wishlist[]
+}
+
+model Order {
+  id          Int       @id @default(autoincrement())
+  user_id     Int
+  total_price Decimal   @db.Decimal(10, 2)
+  status      OrderStatus @default(PENDING)
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @default(now())
+  user        User      @relation(fields: [user_id], references: [id])
+  items       OrderItem[]
+}
+
+model OrderItem {
+  id        Int       @id @default(autoincrement())
+  order_id  Int
+  product_id Int
+  quantity  Int
+  price     Decimal   @db.Decimal(10, 2)
+  order     Order     @relation(fields: [order_id], references: [id])
+  product   Product   @relation(fields: [product_id], references: [id])
+}
+
+model Cart {
+  id        Int       @id @default(autoincrement())
+  user_id   Int
+  product_id Int
+  quantity  Int
+  user      User      @relation(fields: [user_id], references: [id])
+  product   Product   @relation(fields: [product_id], references: [id])
+}
+
+model Wishlist {
+  id        Int       @id @default(autoincrement())
+  user_id   Int
+  product_id Int
+  created_at DateTime @default(now())
+  user      User      @relation(fields: [user_id], references: [id])
+  product   Product   @relation(fields: [product_id], references: [id])
+}
+
+model ApiKey {
+  id        Int       @id @default(autoincrement())
+  user_id   Int
+  api_key   String    @unique
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+  user      User      @relation(fields: [user_id], references: [id])
+}
+
+model ContactUs {
+  id        Int       @id @default(autoincrement())
+  name      String
+  email     String
+  subject   String
+  message   String
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+}
+
+enum Gender {
+  Male
+  Female
+  Other
+}
+
+enum BloodGroup {
+  A_POSITIVE
+  A_NEGATIVE
+  B_POSITIVE
+  B_NEGATIVE
+  O_POSITIVE
+  O_NEGATIVE
+  AB_POSITIVE
+  AB_NEGATIVE
+}
+
+enum ActivityType {
+  MODERATE
+  LAZY
+  ACTIVE
+  SPORTS_PERSON
+}
+enum RoleType {
+  ADMIN
+  USER
+  VENDOR
+}
+enum Goal {
+  GAIN
+  LOSE
+  MAINTAIN
+}
+
+enum ActivityUnit {
+  KM
+  MINUTES
+  REPS
+  SETS
+}
+
+enum WorkoutStatus {
+  PENDING
+  COMPLETED
+  SKIPPED
+}
+
+enum MealType {
+  BREAKFAST
+  LUNCH
+  DINNER
+  SNACK
+}
+
+enum DietStatus {
+  PENDING
+  COMPLETED
+  SKIPPED
+}
+
+enum RecommendationType {
+  DIET
+  WORKOUT
+}
+
+enum RecommendationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum GoalStatus {
+  ON_TRACK
+  OFF_TRACK
+  EXCEEDED
+}
+
+enum MessageStatus {
+  SENT
+  DELIVERED
+  READ
+}
+
+enum NotificationStatus {
+  UNREAD
+  READ
+}
+
+enum OrderStatus {
+  PENDING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
