@@ -85,3 +85,20 @@ export const sendResetSuccessEmail = async (email) => {
 		throw new Error(`Error sending password reset success email: ${error.message}`);
 	}
 };
+
+export const sendOtpEmail = async (email, otp) => {
+	const message = {
+		from: sender,
+		to: email,
+		subject: "Your OTP for Insightstracker",
+		html: `<p>Your OTP is ${otp}. It will expire in 5 minutes.</p>`,
+	};
+
+	try {
+		await transporter.sendMail(message);
+		console.log("OTP email sent successfully");
+	} catch (error) {
+		console.error(`Error sending OTP email`, error);
+		throw new Error(`Error sending OTP email: ${error.message}`);
+	}
+};
