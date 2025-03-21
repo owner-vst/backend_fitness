@@ -66,12 +66,14 @@ export const signup = async (req, res) => {
 		const user = await prisma.user.create({
 			data: {
 				email,
+				first_name: firstname,
+				last_name: lastname,
 				password_hash: hashedPassword,
 				name: `${firstname} ${lastname}`,
 				gender,
 				dob: new Date(dob),
 				profilePic,
-				role_id: 1,
+				role_id: 2,
 				verificationToken,
 				created_at: new Date(),
 				updated_at: new Date(),
@@ -80,7 +82,7 @@ export const signup = async (req, res) => {
 		});
 
 		// jwt
-		generateTokenAndSetCookie(res, user.id);
+		//generateTokenAndSetCookie(res, user.id);
 
 		await sendVerificationEmail(user.email, verificationToken);
 
@@ -267,7 +269,7 @@ export const resetPassword = async (req, res) => {
 export const checkAuth = async (req, res) => {
 	try {
 		const user = await prisma.user.findUnique({
-			where: { id: req.userId },
+			where: { id: req.user.id },
 			select: {
 				id: true,
 				email: true,
@@ -277,6 +279,7 @@ export const checkAuth = async (req, res) => {
 				// Add other fields you want to include
 			},
 		});
+		
 		if (!user) {
 			return res.status(400).json({ success: false, message: "User not found" });
 		}

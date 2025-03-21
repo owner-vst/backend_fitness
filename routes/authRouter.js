@@ -9,7 +9,7 @@ import {
 	checkAuth,
 	verifyOtp,
 } from "../controllers/authControllers.js";
-import { verifyToken } from "../middlewares/verifyToken.js";
+import { checkPermissions, verifyToken } from "../middlewares/verifyToken.js";
 
 const authRouter = express.Router();
 
@@ -24,5 +24,9 @@ authRouter.post("/verify-email", verifyEmail);
 authRouter.post("/forgot-password", forgotPassword);
 
 authRouter.post("/reset-password/:token", resetPassword);
+
+authRouter.post('/manage-users', verifyToken, checkPermissions(['manage_users']), (req, res) => {
+    res.send('Admin can manage users');
+});
 
 export default authRouter;

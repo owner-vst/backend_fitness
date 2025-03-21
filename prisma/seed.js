@@ -2,25 +2,83 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
-  // Seed Users
-  const users = await prisma.user.createMany({
-    data: [
-      { name: 'Alice', email: 'alice@example.com', dob: new Date('1990-01-01'), gender: 'Female', password_hash: 'hash1', created_at: new Date(), updated_at: new Date() },
-      { name: 'Bob', email: 'bob@example.com', dob: new Date('1985-02-02'), gender: 'Male', password_hash: 'hash2' , created_at: new Date(), updated_at: new Date() },
-      { name: 'Charlie', email: 'charlie@example.com', dob: new Date('1992-03-03'), gender: 'Other', password_hash: 'hash3', created_at: new Date(), updated_at: new Date() },
-      { name: 'David', email: 'david@example.com', dob: new Date('1988-04-04'), gender: 'Male', password_hash: 'hash4', created_at: new Date(), updated_at: new Date() },
-      { name: 'Eve', email: 'eve@example.com', dob: new Date('1995-05-05'), gender: 'Female', password_hash: 'hash5' , created_at: new Date(), updated_at: new Date() },
-    ],
-  });
 
-  // Seed Roles
-  const roles = await prisma.role.createMany({
+   // Seed Roles
+   const roles = await prisma.role.createMany({
     data: [
       { role_name: 'ADMIN' },
       { role_name: 'USER' },
       { role_name: 'VENDOR' },
     ],
   });
+  // Seed Users
+  const users = await prisma.user.createMany({
+    data: [
+      { 
+        first_name: 'Alice', 
+        last_name: 'Smith', 
+        name: 'Alice Smith',
+        email: 'alice@example.com', 
+        dob: new Date('1990-01-01'), 
+        gender: 'Female', 
+        password_hash: 'hash1', 
+        created_at: new Date(), 
+        updated_at: new Date(), 
+        role_id: 1 
+      },
+      { 
+        first_name: 'Bob', 
+        last_name: 'Johnson', 
+        name: 'Bob Johnson',
+        email: 'bob@example.com', 
+        dob: new Date('1985-02-02'), 
+        gender: 'Male', 
+        password_hash: 'hash2', 
+        created_at: new Date(), 
+        updated_at: new Date(), 
+        role_id: 2 
+      },
+      { 
+        first_name: 'Charlie', 
+        last_name: 'Brown', 
+        name: 'Charlie Brown',
+        email: 'charlie@example.com', 
+        dob: new Date('1992-03-03'), 
+        gender: 'Other', 
+        password_hash: 'hash3', 
+        created_at: new Date(), 
+        updated_at: new Date(), 
+        role_id: 3 
+      },
+      { 
+        first_name: 'David', 
+        last_name: 'Wilson', 
+        name: 'David Wilson',
+        email: 'david@example.com', 
+        dob: new Date('1988-04-04'), 
+        gender: 'Male', 
+        password_hash: 'hash4', 
+        created_at: new Date(), 
+        updated_at: new Date(), 
+        role_id: 2 
+      },
+      { 
+        first_name: 'Eve', 
+        last_name: 'Taylor', 
+        name: 'Eve Taylor',
+        email: 'eve@example.com', 
+        dob: new Date('1995-05-05'), 
+        gender: 'Female', 
+        password_hash: 'hash5', 
+        created_at: new Date(), 
+        updated_at: new Date(), 
+        role_id: 3 
+      },
+    ]
+    
+  });
+
+ 
 
   // Seed Permissions
   const permissions = await prisma.permission.createMany({

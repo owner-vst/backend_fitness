@@ -9,13 +9,15 @@ generator client {
 
 model User {
   id                 Int                 @id @default(autoincrement())
+  first_name         String
+  last_name          String
   name               String
   email              String              @unique
   dob      DateTime
   gender             Gender
   profilePic String?
   password_hash      String
-  role_id            Int?
+  role_id            Int
   created_at         DateTime            @default(now())
   updated_at         DateTime            @default(now())
    isVerified                Boolean  @default(false)
@@ -26,7 +28,7 @@ model User {
   resetPasswordExpiresAt    DateTime?
   verificationToken         String?  // Optional
   verificationTokenExpiresAt DateTime?
-  role               Role?               @relation(fields: [role_id], references: [id])
+  role               Role               @relation(fields: [role_id], references: [id])
  // user_profile       UserProfile?        @relation(fields: [id], references: [user_id])
   activities         Activity[]
   workout_plans      WorkoutPlan[]
