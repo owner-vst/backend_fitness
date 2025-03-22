@@ -56,7 +56,7 @@ export const createUsers = async (req, res) => {
     });
 
     if (!role) {
-      return NextResponse.json({ message: "Invalid role" }, { status: 400 });
+      return res.json({ message: "Invalid role" }, { status: 400 });
     }
 
     const user = await prisma.user.create({
@@ -197,5 +197,83 @@ export const deleteUser = async (req, res) => {
     });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+export const getUsers = async (req, res) => {
+  try {
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        first_name: true,
+        last_name: true,
+        gender: true,
+        dob: true,
+        profilePic: true,
+        role: {
+          select: {
+            role_name: true,
+          },
+        },
+      },
+    });
+    if (users.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No users found",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      users,
+    });
+  } catch (error) {
+    return res.status(400).json({ success: false, message: error.message });
+  }
+};
+export const getUserById = async (req, res) => {
+  const userId = parseInt(req.params.userId); // Get the user ID from the request parameters
+
+  // Check if the ID is a valid integer
+  if (isNaN(userId)) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid ID format" });
+  }
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId }, // Ensure that the ID is parsed as an integer
+      select: {
+        id: true,
+        email: true,
+        first_name: true,
+        last_name: true,
+        gender: true,
+        dob: true,
+        profilePic: true,
+        role: {
+          select: {
+            role_name: true,
+          },
+        },
+      },
+    });
+
+    // If no user is found with the given ID
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      user,
+    });
+  } catch (error) {
+    return res.status(400).json({ success: false, message: error.message });
   }
 };

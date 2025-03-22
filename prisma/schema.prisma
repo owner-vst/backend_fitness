@@ -84,7 +84,8 @@ model Activity {
   id    Int       @id @default(autoincrement())
   user_id Int?
   name  String    @unique
-  unit  ActivityUnit
+  duration        Int     // Duration in hours (e.g., 1 hour)
+  calories_per_kg Float
   user  User?     @relation(fields: [user_id], references: [id])
 
   WorkoutPlanItem WorkoutPlanItem[]
@@ -106,7 +107,7 @@ model WorkoutPlanItem {
   id              Int       @id @default(autoincrement())
   workout_plan_id Int
   activity_id     Int
-  quantity        Float
+  duration        Int
   status          WorkoutStatus @default(PENDING)
   workout_plan    WorkoutPlan   @relation(fields: [workout_plan_id], references: [id])
   activity        Activity      @relation(fields: [activity_id], references: [id])
@@ -117,8 +118,8 @@ model WorkoutLog {
   user_id       Int
   date          DateTime
   activity_id   Int
-  quantity      Float
-  calories_burned Float
+  duration      Int
+  
   user          User      @relation(fields: [user_id], references: [id])
   activity      Activity  @relation(fields: [activity_id], references: [id])
 }

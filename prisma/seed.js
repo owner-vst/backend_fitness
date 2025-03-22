@@ -78,6 +78,34 @@ async function main() {
         role_id: 3,
         status: "ACTIVE",
       },
+      {
+        first_name: "Frank",
+        last_name: "Adams",
+        name: "Frank Adams",
+        email: "tolota2225@doishy.com",
+        dob: new Date("1995-05-05"),
+        gender: "Female",
+        password_hash:
+          "$2b$10$ROFhDz7nYnk44uOSNBseVupi2x0Oxglg6HigKFA608CcJukqAVgDO",
+        created_at: new Date(),
+        updated_at: new Date(),
+        role_id: 3,
+        status: "ACTIVE",
+      },
+      {
+        first_name: "John",
+        last_name: "Doe",
+        name: "John Doe",
+        email: "moxaro7286@avulos.com",
+        dob: new Date("1995-05-05"),
+        gender: "Female",
+        password_hash:
+          "$2b$10$v/lT5rsCczV0kO.fL.KKZuIyGO67Qh1ghgoBzOPlCEI2nqCy0R5Iu",
+        created_at: new Date(),
+        updated_at: new Date(),
+        role_id: 1,
+        status: "ACTIVE",
+      },
     ],
   });
 
@@ -86,7 +114,7 @@ async function main() {
     data: [
       { role_id: 1, permission: "CREATE_USER" },
       { role_id: 1, permission: "DELETE_USER" },
-      { role_id: 1, permission: "MODIFY_USERS" },
+      { role_id: 1, permission: "MODIFY_USER" },
       { role_id: 1, permission: "VIEW_USERS" },
 
       { role_id: 1, permission: "VIEW_ORDERS" },
@@ -104,15 +132,35 @@ async function main() {
       { role_id: 1, permission: "DELETE_FOOD_ITEM" },
       { role_id: 1, permission: "MODIFY_FOOD_ITEM" },
 
-      { role_id: 1, permission: "VIEW_WORKOUT_ITEMS" },
-      { role_id: 1, permission: "CREATE_WORKOUT_ITEM" },
-      { role_id: 1, permission: "DELETE_WORKOUT_ITEM" },
-      { role_id: 1, permission: "MODIFY_WORKOUT_ITEM" },
+      { role_id: 1, permission: "VIEW_DIET_PLAN" },
+      { role_id: 1, permission: "CREATE_DIET_PLAN" },
+      { role_id: 1, permission: "DELETE_DIET_PLAN" },
+      { role_id: 1, permission: "MODIFY_DIET_PLAN" },
+
+      { role_id: 1, permission: "VIEW_DIET_ITEMS" },
+      { role_id: 1, permission: "CREATE_DIET_ITEM" },
+      { role_id: 1, permission: "DELETE_DIET_ITEM" },
+      { role_id: 1, permission: "MODIFY_DIET_ITEM" },
 
       { role_id: 1, permission: "VIEW_DIET_LOG" },
       { role_id: 1, permission: "CREATE_DIET_LOG" },
       { role_id: 1, permission: "DELETE_DIET_LOG" },
       { role_id: 1, permission: "MODIFY_DIET_LOG" },
+
+      { role_id: 1, permission: "VIEW_ACTIVITY" },
+      { role_id: 1, permission: "CREATE_ACTIVITY" },
+      { role_id: 1, permission: "DELETE_ACTIVITY" },
+      { role_id: 1, permission: "MODIFY_ACTIVITY" },
+
+      { role_id: 1, permission: "VIEW_WORKOUT_PLAN" },
+      { role_id: 1, permission: "CREATE_WORKOUT_PLAN" },
+      { role_id: 1, permission: "DELETE_WORKOUT_PLAN" },
+      { role_id: 1, permission: "MODIFY_WORKOUT_PLAN" },
+
+      { role_id: 1, permission: "VIEW_WORKOUT_ITEMS" },
+      { role_id: 1, permission: "CREATE_WORKOUT_ITEM" },
+      { role_id: 1, permission: "DELETE_WORKOUT_ITEM" },
+      { role_id: 1, permission: "MODIFY_WORKOUT_ITEM" },
 
       { role_id: 1, permission: "VIEW_WORKOUT_LOG" },
       { role_id: 1, permission: "CREATE_WORKOUT_LOG" },
@@ -137,11 +185,23 @@ async function main() {
       { role_id: 2, permission: "DELETE_PRODUCT" },
       { role_id: 2, permission: "MODIFY_PRODUCT" },
 
+      { role_id: 2, permission: "VIEW_DIET_PLAN" },
+      { role_id: 2, permission: "CREATE_DIET_PLAN" },
+
       { role_id: 2, permission: "VIEW_FOOD_ITEMS" },
       { role_id: 2, permission: "CREATE_FOOD_ITEM" },
 
+      { role_id: 2, permission: "VIEW_WORKOUT_PLAN" },
+      { role_id: 2, permission: "CREATE_WORKOUT_PLAN" },
+
+      { role_id: 2, permission: "VIEW_DIET_ITEMS" },
+      { role_id: 2, permission: "MODIFY_DIET_ITEM" },
+
       { role_id: 2, permission: "VIEW_WORKOUT_ITEMS" },
-      { role_id: 2, permission: "CREATE_WORKOUT_ITEM" },
+      { role_id: 2, permission: "MODIFY_WORKOUT_ITEM" },
+
+      { role_id: 2, permission: "VIEW_ACTIVITY" },
+      { role_id: 2, permission: "CREATE_ACTIVITY" },
 
       { role_id: 2, permission: "VIEW_DIET_LOG" },
       { role_id: 2, permission: "CREATE_DIET_LOG" },
@@ -164,8 +224,20 @@ async function main() {
       { role_id: 3, permission: "VIEW_FOOD_ITEMS" },
       { role_id: 3, permission: "CREATE_FOOD_ITEM" },
 
+      { role_id: 3, permission: "VIEW_DIET_PLAN" },
+      { role_id: 3, permission: "CREATE_DIET_PLAN" },
+
+      { role_id: 3, permission: "VIEW_DIET_ITEMS" },
+      { role_id: 3, permission: "MODIFY_DIET_ITEM" },
+
+      { role_id: 3, permission: "VIEW_WORKOUT_PLAN" },
+      { role_id: 3, permission: "CREATE_WORKOUT_PLAN" },
+
       { role_id: 3, permission: "VIEW_WORKOUT_ITEMS" },
-      { role_id: 3, permission: "CREATE_WORKOUT_ITEM" },
+      { role_id: 3, permission: "MODIFY_WORKOUT_ITEM" },
+
+      { role_id: 3, permission: "VIEW_ACTIVITY" },
+      { role_id: 3, permission: "CREATE_ACTIVITY" },
 
       { role_id: 3, permission: "VIEW_DIET_LOG" },
       { role_id: 3, permission: "CREATE_DIET_LOG" },
@@ -236,11 +308,22 @@ async function main() {
   // Seed Activities
   const activities = await prisma.activity.createMany({
     data: [
-      { name: "Running", unit: "KM" },
-      { name: "Cycling", unit: "KM" },
-      { name: "Swimming", unit: "MINUTES" },
-      { name: "Push-ups", unit: "REPS" },
-      { name: "Squats", unit: "SETS" },
+      {
+        name: "Running",
+        duration: 1, // 1 hour
+        calories_per_kg: 8, // Calories burned per kg per hour
+      },
+      {
+        name: "Swimming",
+        duration: 1, // 1 hour
+        calories_per_kg: 7.5, // Calories burned per kg per hour
+      },
+      {
+        name: "Cycling",
+        duration: 1, // 1 hour
+        calories_per_kg: 6.5, // Calories burned per kg per hour
+      },
+      // Add more activities as needed...
     ],
   });
 
@@ -248,41 +331,40 @@ async function main() {
   const workoutPlans = await prisma.workoutPlan.createMany({
     data: [
       {
-        user_id: 1,
-        start_date: new Date("2023-01-01"),
-        end_date: new Date("2023-01-31"),
+        user_id: 1, // Example user ID
+        start_date: new Date("2025-03-01"),
+        end_date: new Date("2025-03-31"),
+        created_at: new Date(),
       },
       {
-        user_id: 2,
-        start_date: new Date("2023-02-01"),
-        end_date: new Date("2023-02-28"),
+        user_id: 2, // Example user ID
+        start_date: new Date("2025-04-01"),
+        end_date: new Date("2025-04-30"),
+        created_at: new Date(),
       },
-      {
-        user_id: 3,
-        start_date: new Date("2023-03-01"),
-        end_date: new Date("2023-03-31"),
-      },
-      {
-        user_id: 4,
-        start_date: new Date("2023-04-01"),
-        end_date: new Date("2023-04-30"),
-      },
-      {
-        user_id: 5,
-        start_date: new Date("2023-05-01"),
-        end_date: new Date("2023-05-31"),
-      },
+      // Add more workout plans as needed...
     ],
   });
 
   // Seed WorkoutPlanItems
   const workoutPlanItems = await prisma.workoutPlanItem.createMany({
     data: [
-      { workout_plan_id: 1, activity_id: 1, quantity: 5 },
-      { workout_plan_id: 1, activity_id: 2, quantity: 10 },
-      { workout_plan_id: 2, activity_id: 3, quantity: 30 },
-      { workout_plan_id: 2, activity_id: 4, quantity: 20 },
-      { workout_plan_id: 3, activity_id: 5, quantity: 3 },
+      {
+        workout_plan_id: 1, // Example workout plan ID
+        activity_id: 1, // Example activity ID (Running)
+        duration: 1, // 1 hour
+      },
+      {
+        workout_plan_id: 1, // Example workout plan ID
+        activity_id: 2, // Example activity ID (Swimming)
+        duration: 1, // 1 hour
+      },
+      {
+        workout_plan_id: 2, // Example workout plan ID
+        activity_id: 3, // Example activity ID (Cycling)
+        duration: 1, // 1 hour
+      },
+      // Add more workout plan items as needed...
     ],
   });
 
@@ -290,40 +372,24 @@ async function main() {
   const workoutLogs = await prisma.workoutLog.createMany({
     data: [
       {
-        user_id: 1,
-        date: new Date("2023-01-01"),
-        activity_id: 1,
-        quantity: 5,
-        calories_burned: 300,
+        user_id: 1, // Example user ID
+        date: new Date("2025-03-01"),
+        activity_id: 1, // Example activity ID (Running)
+        duration: 1, // 1 hour
       },
       {
-        user_id: 2,
-        date: new Date("2023-02-01"),
-        activity_id: 2,
-        quantity: 10,
-        calories_burned: 400,
+        user_id: 2, // Example user ID
+        date: new Date("2025-03-01"),
+        activity_id: 2, // Example activity ID (Swimming)
+        duration: 1, // 1 hour
       },
       {
-        user_id: 3,
-        date: new Date("2023-03-01"),
-        activity_id: 3,
-        quantity: 30,
-        calories_burned: 200,
+        user_id: 1, // Example user ID
+        date: new Date("2025-03-02"),
+        activity_id: 3, // Example activity ID (Cycling)
+        duration: 1, // 1 hour
       },
-      {
-        user_id: 4,
-        date: new Date("2023-04-01"),
-        activity_id: 4,
-        quantity: 20,
-        calories_burned: 150,
-      },
-      {
-        user_id: 5,
-        date: new Date("2023-05-01"),
-        activity_id: 5,
-        quantity: 3,
-        calories_burned: 250,
-      },
+      // Add more workout logs as needed...
     ],
   });
 
