@@ -20,6 +20,7 @@ model User {
   role_id            Int
   created_at         DateTime            @default(now())
   updated_at         DateTime            @default(now())
+  status            Status              @default(ACTIVE)
    isVerified                Boolean  @default(false)
     otp String?
   otpExpiresAt DateTime?
@@ -384,4 +385,10 @@ enum OrderStatus {
   SHIPPED
   DELIVERED
   CANCELLED
+}
+
+
+enum Status{
+  ACTIVE
+  INACTIVE
 }

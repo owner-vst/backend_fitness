@@ -25,7 +25,7 @@ authRouter.post("/forgot-password", forgotPassword);
 
 authRouter.post("/reset-password/:token", resetPassword);
 
-authRouter.post('/manage-users', verifyToken, checkPermissions(['manage_users']), (req, res) => {
+authRouter.post('/manage-users', verifyToken, checkPermissions(['CREATE_PRODUCT']), (req, res) => {
     res.send('Admin can manage users');
 });
 
