@@ -61,6 +61,14 @@ import {
   viewProduct,
   viewProductsByUser,
 } from "../controllers/productController.js";
+import {
+  createOrder,
+  deleteOrder,
+  updateOrder,
+  viewAllOrders,
+  viewOrder,
+  viewUserOrders,
+} from "../controllers/orderController.js";
 
 const adminRouter = express.Router();
 
@@ -402,5 +410,46 @@ adminRouter.get(
   verifyToken,
   checkPermissions(["VIEW_PRODUCTS"]),
   getAllProducts
+);
+
+//order rotues
+
+adminRouter.get(
+  "/get-orders",
+  verifyToken,
+  checkPermissions(["VIEW_ORDERS"]),
+  viewAllOrders
+);
+adminRouter.get(
+  "/get-user-orders",
+  verifyToken,
+  checkPermissions(["VIEW_ORDERS"]),
+  viewUserOrders
+);
+
+adminRouter.get(
+  "/get-order/:id",
+  verifyToken,
+  checkPermissions(["VIEW_ORDERS"]),
+  viewOrder
+);
+adminRouter.post(
+  "/create-order",
+  verifyToken,
+  checkPermissions(["CREATE_ORDER"]),
+  createOrder
+);
+
+adminRouter.put(
+  "/update-order/:id",
+  verifyToken,
+  checkPermissions(["MODIFY_ORDER"]),
+  updateOrder
+);
+adminRouter.delete(
+  "/delete-order/:id",
+  verifyToken,
+  checkPermissions(["DELETE_ORDER"]),
+  deleteOrder
 );
 export default adminRouter;
