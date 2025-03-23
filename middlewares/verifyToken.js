@@ -33,6 +33,9 @@ export const verifyToken = async (req, res, next) => {
       userId: user.id,
       email: user.email,
       role: user.role,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      profilePic: user.profilePic,
       permissions: user.role.permissions.map(
         (permission) => permission.permission
       ),
