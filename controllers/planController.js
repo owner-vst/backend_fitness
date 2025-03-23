@@ -174,3 +174,180 @@ export const getAllWorkoutPlans = async (req, res) => {
     });
   }
 };
+
+//dietPlan
+
+const createDietPlanSchema = z.object({
+  user_id: z.number().min(1, "User ID is required"),
+  start_date: z.string().datetime(),
+  end_date: z.string().datetime(),
+});
+
+export const createDietPlan = async (req, res) => {
+  const { body } = req;
+
+  try {
+    // Validate the request body
+    const parsedBody = createDietPlanSchema.parse(body);
+
+    // Create the diet plan
+    const dietPlan = await prisma.dietPlan.create({
+      data: {
+        user_id: parsedBody.user_id,
+        start_date: new Date(parsedBody.start_date),
+        end_date: new Date(parsedBody.end_date),
+        created_at: new Date(),
+      },
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Diet plan created successfully",
+      dietPlan,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+const updateDietPlanSchema = z.object({
+  start_date: z.string().datetime().optional(),
+  end_date: z.string().datetime().optional(),
+});
+
+export const updateDietPlan = async (req, res) => {
+  const { id } = req.params;
+  const { body } = req;
+
+  try {
+    // Validate the request body
+    const parsedBody = updateDietPlanSchema.parse(body);
+
+    // Find the diet plan by ID
+    const dietPlan = await prisma.dietPlan.findUnique({
+      where: { id: parseInt(id) },
+    });
+
+    if (!dietPlan) {
+      return res.status(404).json({
+        success: false,
+        message: "Diet plan not found",
+      });
+    }
+
+    // Update the diet plan
+    const updatedDietPlan = await prisma.dietPlan.update({
+      where: { id: parseInt(id) },
+      data: {
+        start_date: parsedBody.start_date
+          ? new Date(parsedBody.start_date)
+          : dietPlan.start_date,
+        end_date: parsedBody.end_date
+          ? new Date(parsedBody.end_date)
+          : dietPlan.end_date,
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Diet plan updated successfully",
+      dietPlan: updatedDietPlan,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const deleteDietPlan = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Find the diet plan by ID
+    const dietPlan = await prisma.dietPlan.findUnique({
+      where: { id: parseInt(id) },
+    });
+
+    if (!dietPlan) {
+      return res.status(404).json({
+        success: false,
+        message: "Diet plan not found",
+      });
+    }
+
+    // Delete the diet plan
+    await prisma.dietPlan.delete({
+      where: { id: parseInt(id) },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Diet plan deleted successfully",
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const viewDietPlan = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const dietPlan = await prisma.dietPlan.findUnique({
+      where: { id: parseInt(id) },
+      include: {
+        items: true, // Include related diet plan items
+        user: true, // Include the user data if needed
+      },
+    });
+
+    if (!dietPlan) {
+      return res.status(404).json({
+        success: false,
+        message: "Diet plan not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      dietPlan,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const getAllDietPlans = async (req, res) => {
+  try {
+    // Fetch all diet plans from the database
+    const dietPlans = await prisma.dietPlan.findMany({
+      include: {
+        user: true, // Optionally include user details
+        items: true, // Optionally include items associated with the diet plan
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      dietPlans,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+//

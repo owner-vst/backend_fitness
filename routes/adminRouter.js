@@ -3,7 +3,6 @@ import { checkPermissions, verifyToken } from "../middlewares/verifyToken.js";
 import {
   createUsers,
   deleteUser,
- 
   getUserById,
   getUsers,
   modifyUser,
@@ -25,12 +24,35 @@ import {
   updateWorkoutPlanItem,
 } from "../controllers/workoutController.js";
 import {
+  createDietPlan,
   createWorkoutPlan,
+  deleteDietPlan,
   deleteWorkoutPlan,
+  getAllDietPlans,
   getAllWorkoutPlans,
+  updateDietPlan,
   updateWorkoutPlan,
+  viewDietPlan,
   viewWorkoutPlan,
 } from "../controllers/planController.js";
+import {
+  createDietPlanItem,
+  createFoodCatalogue,
+  createFoodLog,
+  deleteDietPlanItem,
+  deleteFoodCatalogue,
+  deleteFoodLog,
+  getAllDietPlanItems,
+  getAllFoodCatalogue,
+  getAllFoodLogs,
+  getAllFoodLogsforUser,
+  getFoodCatalogueById,
+  modifyFoodCatalogue,
+  updateDietPlanItem,
+  updateFoodLog,
+  viewDietPlanItem,
+  viewFoodLog,
+} from "../controllers/dietController.js";
 
 const adminRouter = express.Router();
 
@@ -189,5 +211,150 @@ adminRouter.delete(
   verifyToken,
   checkPermissions(["DELETE_WORKOUT_LOG"]),
   deleteWorkoutLog
+);
+// DietItem routes
+adminRouter.post(
+  "/create-food-item",
+  verifyToken,
+  checkPermissions(["CREATE_FOOD_ITEM"]),
+  createFoodCatalogue
+);
+adminRouter.get(
+  "/get-food-items",
+  verifyToken,
+  checkPermissions(["VIEW_FOOD_ITEMS"]),
+  getAllFoodCatalogue
+);
+adminRouter.get(
+  "/get-food-item/:foodId",
+  verifyToken,
+  checkPermissions(["VIEW_FOOD_ITEMS"]),
+  getFoodCatalogueById
+);
+adminRouter.put(
+  "/update-food-item/:foodId",
+  verifyToken,
+  checkPermissions(["MODIFY_FOOD_ITEM"]),
+  modifyFoodCatalogue
+);
+adminRouter.delete(
+  "/delete-food-item/:foodId",
+  verifyToken,
+  checkPermissions(["DELETE_FOOD_ITEM"]),
+  deleteFoodCatalogue
+);
+
+//dietplan routes
+adminRouter.get(
+  "/get-diet-plans",
+  verifyToken,
+  checkPermissions(["VIEW_DIET_PLAN"]),
+  getAllDietPlans
+);
+
+adminRouter.get(
+  "/get-diet-plan/:id",
+  verifyToken,
+  checkPermissions(["VIEW_DIET_PLAN"]),
+  viewDietPlan
+);
+
+adminRouter.post(
+  "/create-diet-plan",
+  verifyToken,
+  checkPermissions(["CREATE_DIET_PLAN"]),
+  createDietPlan
+);
+
+adminRouter.put(
+  "/update-diet-plan/:id",
+  verifyToken,
+  checkPermissions(["MODIFY_DIET_PLAN"]),
+  updateDietPlan
+);
+
+adminRouter.delete(
+  "/delete-diet-plan/:id",
+  verifyToken,
+  checkPermissions(["DELETE_DIET_PLAN"]),
+  deleteDietPlan
+);
+
+//diet plan items
+
+adminRouter.get(
+  "/get-diet-plan-items/:id",
+  verifyToken,
+  checkPermissions(["VIEW_DIET_ITEMS"]),
+  viewDietPlanItem
+);
+
+adminRouter.get(
+  "/get-diet-plan-items",
+  verifyToken,
+  checkPermissions(["VIEW_DIET_ITEMS"]),
+  getAllDietPlanItems
+);
+
+adminRouter.post(
+  "/create-diet-plan-item",
+  verifyToken,
+  checkPermissions(["CREATE_DIET_ITEM"]),
+  createDietPlanItem
+);
+
+adminRouter.put(
+  "/update-diet-plan-item/:id",
+  verifyToken,
+  checkPermissions(["MODIFY_DIET_ITEM"]),
+  updateDietPlanItem
+);
+
+adminRouter.delete(
+  "/delete-diet-plan-item/:id",
+  verifyToken,
+  checkPermissions(["DELETE_DIET_ITEM"]),
+  deleteDietPlanItem
+);
+
+//diet-log
+adminRouter.post(
+  "/create-diet-log",
+  verifyToken,
+  checkPermissions(["CREATE_DIET_LOG"]),
+  createFoodLog
+);
+
+adminRouter.put(
+  "/update-diet-log/:id",
+  verifyToken,
+  checkPermissions(["MODIFY_DIET_LOG"]),
+  updateFoodLog
+);
+
+adminRouter.get(
+  "/get-diet-log/:id",
+  verifyToken,
+  checkPermissions(["VIEW_DIET_LOG"]),
+  viewFoodLog
+);
+adminRouter.get(
+  "/get-user-diet-logs/:userId",
+  verifyToken,
+  checkPermissions(["VIEW_DIET_LOG"]),
+  getAllFoodLogsforUser
+);
+adminRouter.get(
+  "/get-diet-logs",
+  verifyToken,
+  checkPermissions(["VIEW_DIET_LOG"]),
+  getAllFoodLogs
+);
+
+adminRouter.delete(
+  "/delete-diet-log/:id",
+  verifyToken,
+  checkPermissions(["DELETE_DIET_LOG"]),
+  deleteFoodLog
 );
 export default adminRouter;

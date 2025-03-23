@@ -132,6 +132,7 @@ model FoodCatalogue {
   carbs       Float
   protein     Float
   fats        Float
+  serving_size_gm Float
   user        User?     @relation(fields: [user_id], references: [id])
 
   DietPlanItem DietPlanItem[]
