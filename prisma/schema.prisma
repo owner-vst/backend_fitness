@@ -48,6 +48,8 @@ model User {
   api_keys           ApiKey[]
 
   UserProfile UserProfile[]
+
+  Product Product[]
 }
 
 model Role {
@@ -229,11 +231,14 @@ model Product {
   stock       Int       @default(0)
   category    String
   image_url   String?
+  user_id     Int      @default(1)
+  status      Status    @default(ACTIVE)
   created_at  DateTime  @default(now())
   updated_at  DateTime  @default(now())
   order_items OrderItem[]
   cart        Cart[]
   wishlist    Wishlist[]
+   user        User      @relation(fields: [user_id], references: [id])
 }
 
 model Order {

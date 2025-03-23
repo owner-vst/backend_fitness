@@ -53,6 +53,14 @@ import {
   viewDietPlanItem,
   viewFoodLog,
 } from "../controllers/dietController.js";
+import {
+  createProduct,
+  deleteProduct,
+  getAllProducts,
+  updateProduct,
+  viewProduct,
+  viewProductsByUser,
+} from "../controllers/productController.js";
 
 const adminRouter = express.Router();
 
@@ -356,5 +364,43 @@ adminRouter.delete(
   verifyToken,
   checkPermissions(["DELETE_DIET_LOG"]),
   deleteFoodLog
+);
+
+//product controller
+adminRouter.post(
+  "/create-product",
+  verifyToken,
+  checkPermissions(["CREATE_PRODUCT"]),
+  createProduct
+);
+adminRouter.put(
+  "/update-product/:id",
+  verifyToken,
+  checkPermissions(["MODIFY_PRODUCT"]),
+  updateProduct
+);
+adminRouter.delete(
+  "/delete-product/:id",
+  verifyToken,
+  checkPermissions(["DELETE_PRODUCT"]),
+  deleteProduct
+);
+adminRouter.get(
+  "/get-product/:id",
+  verifyToken,
+  checkPermissions(["VIEW_PRODUCTS"]),
+  viewProduct
+);
+adminRouter.get(
+  "/get-user-product",
+  verifyToken,
+  checkPermissions(["VIEW_PRODUCTS"]),
+  viewProductsByUser
+);
+adminRouter.get(
+  "/get-all-products",
+  verifyToken,
+  checkPermissions(["VIEW_PRODUCTS"]),
+  getAllProducts
 );
 export default adminRouter;
