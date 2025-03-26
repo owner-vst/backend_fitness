@@ -199,7 +199,7 @@ export const login = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "OTP sent to your email",
-      needsOtp: true, // Notify the frontend that OTP is required
+
       userId: user.id, // Send user ID so the frontend can send it back when submitting OTP
     });
   } catch (error) {
@@ -209,6 +209,7 @@ export const login = async (req, res) => {
 };
 
 export const logout = async (req, res) => {
+  console.log("logout successfully");
   res.clearCookie("token");
   res.status(200).json({ success: true, message: "Logged out successfully" });
 };
@@ -329,8 +330,9 @@ export const checkAuth = async (req, res) => {
 export const verifyOtp = async (req, res) => {
   try {
     const { otp, userId } = req.body;
+
     const user = await prisma.user.findUnique({
-      where: { id: userId, otp },
+      where: { id: parseInt(userId), otp },
     });
 
     const role = await prisma.role.findUnique({
@@ -357,7 +359,7 @@ export const verifyOtp = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "OTP verified successfully",
-      role: role.role_name,
+      role: role.role_name.toLocaleLowerCase(),
       user: { ...user, password_hash: undefined },
       // Send the user object in the response
       token, // Send the JWT token in the response
