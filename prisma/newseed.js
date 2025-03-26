@@ -10,6 +10,7 @@ async function main() {
       { role_name: "USER" },
     ],
   });
+
   // Seed Users
   const users = await prisma.user.createMany({
     data: [
@@ -116,145 +117,108 @@ async function main() {
       { role_id: 1, permission: "DELETE_USER" },
       { role_id: 1, permission: "MODIFY_USER" },
       { role_id: 1, permission: "VIEW_USERS" },
-
       { role_id: 1, permission: "VIEW_ORDERS" },
       { role_id: 1, permission: "CREATE_ORDER" },
       { role_id: 1, permission: "DELETE_ORDER" },
       { role_id: 1, permission: "MODIFY_ORDER" },
-
       { role_id: 1, permission: "VIEW_PRODUCTS" },
       { role_id: 1, permission: "CREATE_PRODUCT" },
       { role_id: 1, permission: "DELETE_PRODUCT" },
       { role_id: 1, permission: "MODIFY_PRODUCT" },
-
       { role_id: 1, permission: "VIEW_FOOD_ITEMS" },
       { role_id: 1, permission: "CREATE_FOOD_ITEM" },
       { role_id: 1, permission: "DELETE_FOOD_ITEM" },
       { role_id: 1, permission: "MODIFY_FOOD_ITEM" },
-
       { role_id: 1, permission: "VIEW_DIET_PLAN" },
       { role_id: 1, permission: "CREATE_DIET_PLAN" },
       { role_id: 1, permission: "DELETE_DIET_PLAN" },
       { role_id: 1, permission: "MODIFY_DIET_PLAN" },
-
       { role_id: 1, permission: "VIEW_DIET_ITEMS" },
       { role_id: 1, permission: "CREATE_DIET_ITEM" },
       { role_id: 1, permission: "DELETE_DIET_ITEM" },
       { role_id: 1, permission: "MODIFY_DIET_ITEM" },
-
       { role_id: 1, permission: "VIEW_DIET_LOG" },
       { role_id: 1, permission: "CREATE_DIET_LOG" },
       { role_id: 1, permission: "DELETE_DIET_LOG" },
       { role_id: 1, permission: "MODIFY_DIET_LOG" },
-
       { role_id: 1, permission: "VIEW_ACTIVITY" },
       { role_id: 1, permission: "CREATE_ACTIVITY" },
       { role_id: 1, permission: "DELETE_ACTIVITY" },
       { role_id: 1, permission: "MODIFY_ACTIVITY" },
-
       { role_id: 1, permission: "VIEW_WORKOUT_PLAN" },
       { role_id: 1, permission: "CREATE_WORKOUT_PLAN" },
       { role_id: 1, permission: "DELETE_WORKOUT_PLAN" },
       { role_id: 1, permission: "MODIFY_WORKOUT_PLAN" },
-
       { role_id: 1, permission: "VIEW_WORKOUT_ITEMS" },
       { role_id: 1, permission: "CREATE_WORKOUT_ITEM" },
       { role_id: 1, permission: "DELETE_WORKOUT_ITEM" },
       { role_id: 1, permission: "MODIFY_WORKOUT_ITEM" },
-
       { role_id: 1, permission: "VIEW_WORKOUT_LOG" },
       { role_id: 1, permission: "CREATE_WORKOUT_LOG" },
       { role_id: 1, permission: "DELETE_WORKOUT_LOG" },
       { role_id: 1, permission: "MODIFY_WORKOUT_LOG" },
-
       { role_id: 1, permission: "VIEW_DASHBOARD_STATS" },
       { role_id: 1, permission: "VIEW_WORKOUT_STATS" },
-
       { role_id: 1, permission: "SEND_MESSAGE" },
       { role_id: 1, permission: "GET_MESSAGE" },
-
       { role_id: 1, permission: "UPDATE_PROFILE" },
-
       { role_id: 2, permission: "VIEW_ORDERS" },
       { role_id: 2, permission: "CREATE_ORDER" },
       { role_id: 2, permission: "DELETE_ORDER" },
       { role_id: 2, permission: "MODIFY_ORDER" },
-
       { role_id: 2, permission: "VIEW_PRODUCTS" },
       { role_id: 2, permission: "CREATE_PRODUCT" },
       { role_id: 2, permission: "DELETE_PRODUCT" },
       { role_id: 2, permission: "MODIFY_PRODUCT" },
-
       { role_id: 2, permission: "VIEW_DIET_PLAN" },
       { role_id: 2, permission: "CREATE_DIET_PLAN" },
-
       { role_id: 2, permission: "VIEW_FOOD_ITEMS" },
       { role_id: 2, permission: "CREATE_FOOD_ITEM" },
-
       { role_id: 2, permission: "VIEW_WORKOUT_PLAN" },
       { role_id: 2, permission: "CREATE_WORKOUT_PLAN" },
-
       { role_id: 2, permission: "VIEW_DIET_ITEMS" },
       { role_id: 2, permission: "MODIFY_DIET_ITEM" },
-
       { role_id: 2, permission: "VIEW_WORKOUT_ITEMS" },
       { role_id: 2, permission: "MODIFY_WORKOUT_ITEM" },
-
       { role_id: 2, permission: "VIEW_ACTIVITY" },
       { role_id: 2, permission: "CREATE_ACTIVITY" },
-
       { role_id: 2, permission: "VIEW_DIET_LOG" },
       { role_id: 2, permission: "CREATE_DIET_LOG" },
       { role_id: 2, permission: "DELETE_DIET_LOG" },
       { role_id: 2, permission: "MODIFY_DIET_LOG" },
-
       { role_id: 2, permission: "VIEW_WORKOUT_LOG" },
       { role_id: 2, permission: "CREATE_WORKOUT_LOG" },
       { role_id: 2, permission: "DELETE_WORKOUT_LOG" },
       { role_id: 2, permission: "MODIFY_WORKOUT_LOG" },
-
       { role_id: 2, permission: "VIEW_DASHBOARD_STATS" },
       { role_id: 2, permission: "VIEW_WORKOUT_STATS" },
-
       { role_id: 2, permission: "SEND_MESSAGE" },
       { role_id: 2, permission: "GET_MESSAGE" },
-
       { role_id: 2, permission: "UPDATE_PROFILE" },
-
       { role_id: 3, permission: "VIEW_FOOD_ITEMS" },
       { role_id: 3, permission: "CREATE_FOOD_ITEM" },
-
       { role_id: 3, permission: "VIEW_DIET_PLAN" },
       { role_id: 3, permission: "CREATE_DIET_PLAN" },
-
       { role_id: 3, permission: "VIEW_DIET_ITEMS" },
       { role_id: 3, permission: "MODIFY_DIET_ITEM" },
-
       { role_id: 3, permission: "VIEW_WORKOUT_PLAN" },
       { role_id: 3, permission: "CREATE_WORKOUT_PLAN" },
-
       { role_id: 3, permission: "VIEW_WORKOUT_ITEMS" },
       { role_id: 3, permission: "MODIFY_WORKOUT_ITEM" },
-
       { role_id: 3, permission: "VIEW_ACTIVITY" },
       { role_id: 3, permission: "CREATE_ACTIVITY" },
-
       { role_id: 3, permission: "VIEW_DIET_LOG" },
       { role_id: 3, permission: "CREATE_DIET_LOG" },
       { role_id: 3, permission: "DELETE_DIET_LOG" },
       { role_id: 3, permission: "MODIFY_DIET_LOG" },
-
       { role_id: 3, permission: "VIEW_WORKOUT_LOG" },
       { role_id: 3, permission: "CREATE_WORKOUT_LOG" },
       { role_id: 3, permission: "DELETE_WORKOUT_LOG" },
       { role_id: 3, permission: "MODIFY_WORKOUT_LOG" },
-
       { role_id: 3, permission: "VIEW_DASHBOARD_STATS" },
       { role_id: 3, permission: "VIEW_WORKOUT_STATS" },
-
       { role_id: 3, permission: "SEND_MESSAGE" },
       { role_id: 3, permission: "GET_MESSAGE" },
-
       { role_id: 3, permission: "UPDATE_PROFILE" },
     ],
   });
@@ -302,6 +266,22 @@ async function main() {
         activity_type: "MODERATE",
         goal: "GAIN",
       },
+      {
+        user_id: 6,
+        height: 155,
+        weight: 55,
+        blood_group: "B_NEGATIVE",
+        activity_type: "ACTIVE",
+        goal: "LOSE",
+      },
+      {
+        user_id: 7,
+        height: 185,
+        weight: 85,
+        blood_group: "O_NEGATIVE",
+        activity_type: "LAZY",
+        goal: "MAINTAIN",
+      },
     ],
   });
 
@@ -310,20 +290,29 @@ async function main() {
     data: [
       {
         name: "Running",
-        duration: 1, // 1 hour
+        duration: 60, // in min
         calories_per_kg: 8, // Calories burned per kg per hour
       },
       {
         name: "Swimming",
-        duration: 1, // 1 hour
+        duration: 60, // in min
         calories_per_kg: 7.5, // Calories burned per kg per hour
       },
       {
         name: "Cycling",
-        duration: 1, // 1 hour
+        duration: 60, // in min
         calories_per_kg: 6.5, // Calories burned per kg per hour
       },
-      // Add more activities as needed...
+      {
+        name: "Yoga",
+        duration: 60, // in min
+        calories_per_kg: 3, // Calories burned per kg per hour
+      },
+      {
+        name: "Weightlifting",
+        duration: 60, // in min
+        calories_per_kg: 6, // Calories burned per kg per hour
+      },
     ],
   });
 
@@ -342,7 +331,12 @@ async function main() {
         end_date: new Date("2025-04-30"),
         created_at: new Date(),
       },
-      // Add more workout plans as needed...
+      {
+        user_id: 7, // Example user ID
+        start_date: new Date("2025-05-01"),
+        end_date: new Date("2025-05-31"),
+        created_at: new Date(),
+      },
     ],
   });
 
@@ -352,19 +346,48 @@ async function main() {
       {
         workout_plan_id: 1, // Example workout plan ID
         activity_id: 1, // Example activity ID (Running)
-        duration: 1, // 1 hour
+        duration: 60, //in min
       },
       {
         workout_plan_id: 1, // Example workout plan ID
         activity_id: 2, // Example activity ID (Swimming)
-        duration: 1, // 1 hour
+        duration: 30, //in min
+      },
+      {
+        workout_plan_id: 1, // Example workout plan ID
+        activity_id: 3, // Example activity ID (Cycling)
+        duration: 30, //in min
       },
       {
         workout_plan_id: 2, // Example workout plan ID
-        activity_id: 3, // Example activity ID (Cycling)
-        duration: 1, // 1 hour
+        activity_id: 4, // Example activity ID (Yoga)
+        duration: 15, //in min
       },
-      // Add more workout plan items as needed...
+      {
+        workout_plan_id: 2, // Example workout plan ID
+        activity_id: 5, // Example activity ID (Weightlifting)
+        duration: 20, //in min
+      },
+      {
+        workout_plan_id: 2, // Example workout plan ID
+        activity_id: 1, // Example activity ID (Running)
+        duration: 10, //in min
+      },
+      {
+        workout_plan_id: 3, // Example workout plan ID
+        activity_id: 2, // Example activity ID (Swimming)
+        duration: 30, //in min
+      },
+      {
+        workout_plan_id: 3, // Example workout plan ID
+        activity_id: 3, // Example activity ID (Cycling)
+        duration: 30, //in min
+      },
+      {
+        workout_plan_id: 3, // Example workout plan ID
+        activity_id: 4, // Example activity ID (Yoga)
+        duration: 15, //in min
+      },
     ],
   });
 
@@ -375,7 +398,7 @@ async function main() {
         user_id: 1, // Example user ID
         date: new Date("2025-03-01"),
         activity_id: 1, // Example activity ID (Running)
-        duration: 80, // 1 hour
+        duration: 60, // 1 hour
         status: "COMPLETED",
       },
       {
@@ -389,17 +412,30 @@ async function main() {
         user_id: 1, // Example user ID
         date: new Date("2025-03-02"),
         activity_id: 3, // Example activity ID (Cycling)
-        duration: 120, // 1 hour
+        duration: 60, // 1 hour
         status: "COMPLETED",
       },
       {
         user_id: 2, // Example user ID
         date: new Date("2025-03-02"),
         activity_id: 1, // Example activity ID (Running)
-        duration: 90, // 1 hour
+        duration: 60, // 1 hour
         status: "COMPLETED",
       },
-      // Add more workout logs as needed...
+      {
+        user_id: 3, // Example user ID
+        date: new Date("2025-03-03"),
+        activity_id: 4, // Example activity ID (Yoga)
+        duration: 60, // 1 hour
+        status: "COMPLETED",
+      },
+      {
+        user_id: 4, // Example user ID
+        date: new Date("2025-03-03"),
+        activity_id: 5, // Example activity ID (Weightlifting)
+        duration: 60, // 1 hour
+        status: "COMPLETED",
+      },
     ],
   });
 
@@ -486,7 +522,6 @@ async function main() {
         fats: 3.6,
         serving_size_gm: 100,
       },
-
       {
         name: "Rice",
         calories: 205,
@@ -530,7 +565,7 @@ async function main() {
         end_date: new Date("2023-04-30"),
       },
       {
-        user_id: 5,
+        user_id: 7,
         start_date: new Date("2023-05-01"),
         end_date: new Date("2023-05-31"),
       },
@@ -542,9 +577,24 @@ async function main() {
     data: [
       { diet_plan_id: 1, meal_type: "BREAKFAST", food_id: 1, quantity: 1 },
       { diet_plan_id: 1, meal_type: "LUNCH", food_id: 2, quantity: 1 },
-      { diet_plan_id: 2, meal_type: "DINNER", food_id: 3, quantity: 200 },
-      { diet_plan_id: 2, meal_type: "SNACK", food_id: 4, quantity: 150 },
-      { diet_plan_id: 3, meal_type: "BREAKFAST", food_id: 5, quantity: 100 },
+      { diet_plan_id: 1, meal_type: "DINNER", food_id: 3, quantity: 200 },
+      { diet_plan_id: 1, meal_type: "SNACK", food_id: 4, quantity: 150 },
+      { diet_plan_id: 2, meal_type: "BREAKFAST", food_id: 5, quantity: 100 },
+      { diet_plan_id: 2, meal_type: "LUNCH", food_id: 6, quantity: 1 },
+      { diet_plan_id: 2, meal_type: "DINNER", food_id: 7, quantity: 10 },
+      { diet_plan_id: 2, meal_type: "SNACK", food_id: 8, quantity: 50 },
+      { diet_plan_id: 3, meal_type: "BREAKFAST", food_id: 9, quantity: 200 },
+      { diet_plan_id: 3, meal_type: "LUNCH", food_id: 10, quantity: 150 },
+      { diet_plan_id: 3, meal_type: "DINNER", food_id: 11, quantity: 100 },
+      { diet_plan_id: 3, meal_type: "SNACK", food_id: 12, quantity: 50 },
+      { diet_plan_id: 4, meal_type: "BREAKFAST", food_id: 1, quantity: 1 },
+      { diet_plan_id: 4, meal_type: "LUNCH", food_id: 2, quantity: 1 },
+      { diet_plan_id: 4, meal_type: "DINNER", food_id: 3, quantity: 200 },
+      { diet_plan_id: 4, meal_type: "SNACK", food_id: 4, quantity: 150 },
+      { diet_plan_id: 5, meal_type: "BREAKFAST", food_id: 5, quantity: 100 },
+      { diet_plan_id: 5, meal_type: "LUNCH", food_id: 6, quantity: 1 },
+      { diet_plan_id: 5, meal_type: "DINNER", food_id: 7, quantity: 10 },
+      { diet_plan_id: 5, meal_type: "SNACK", food_id: 8, quantity: 50 },
     ],
   });
 
@@ -670,10 +720,30 @@ async function main() {
   const messages = await prisma.message.createMany({
     data: [
       { sender_id: 1, receiver_id: 2, content: "Hello Bob!" },
+      { sender_id: 2, receiver_id: 1, content: "Hi Alice!" },
+      { sender_id: 1, receiver_id: 2, content: "How are you?" },
+      { sender_id: 2, receiver_id: 1, content: "I'm good, thanks!" },
+      { sender_id: 1, receiver_id: 2, content: "What's up?" },
       { sender_id: 2, receiver_id: 3, content: "Hi Charlie!" },
+      { sender_id: 3, receiver_id: 2, content: "Hello Bob!" },
+      { sender_id: 2, receiver_id: 3, content: "How's it going?" },
+      { sender_id: 3, receiver_id: 2, content: "Not bad, you?" },
+      { sender_id: 2, receiver_id: 3, content: "Doing well, thanks!" },
       { sender_id: 3, receiver_id: 4, content: "Hey David!" },
+      { sender_id: 4, receiver_id: 3, content: "Hi Charlie!" },
+      { sender_id: 3, receiver_id: 4, content: "What's new?" },
+      { sender_id: 4, receiver_id: 3, content: "Not much, you?" },
+      { sender_id: 3, receiver_id: 4, content: "Same here." },
       { sender_id: 4, receiver_id: 5, content: "Hello Eve!" },
+      { sender_id: 5, receiver_id: 4, content: "Hi David!" },
+      { sender_id: 4, receiver_id: 5, content: "How are you?" },
+      { sender_id: 5, receiver_id: 4, content: "I'm good, thanks!" },
+      { sender_id: 4, receiver_id: 5, content: "What's up?" },
       { sender_id: 5, receiver_id: 1, content: "Hi Alice!" },
+      { sender_id: 1, receiver_id: 5, content: "Hello Eve!" },
+      { sender_id: 5, receiver_id: 1, content: "How's it going?" },
+      { sender_id: 1, receiver_id: 5, content: "Not bad, you?" },
+      { sender_id: 5, receiver_id: 1, content: "Doing well, thanks!" },
     ],
   });
 
@@ -741,6 +811,56 @@ async function main() {
         image_url: "tracker.jpg",
         status: "ACTIVE",
       },
+      {
+        name: "Resistance Bands",
+        description: "High-quality resistance bands",
+        price: 20.0,
+        stock: 150,
+        user_id: 2,
+        category: "Equipment",
+        image_url: "bands.jpg",
+        status: "ACTIVE",
+      },
+      {
+        name: "Water Bottle",
+        description: "Insulated water bottle",
+        price: 15.0,
+        stock: 300,
+        user_id: 3,
+        category: "Accessories",
+        image_url: "bottle.jpg",
+        status: "ACTIVE",
+      },
+      {
+        name: "Jump Rope",
+        description: "Adjustable jump rope",
+        price: 10.0,
+        stock: 200,
+        user_id: 4,
+        category: "Equipment",
+        image_url: "rope.jpg",
+        status: "ACTIVE",
+      },
+      {
+        name: "Gym Bag",
+        description: "Durable gym bag",
+        price: 40.0,
+        stock: 100,
+        user_id: 5,
+        category: "Accessories",
+        image_url: "bag.jpg",
+        status: "ACTIVE",
+      },
+      {
+        name: "Foam Roller",
+        description: "High-density foam roller",
+        price: 25.0,
+        stock: 120,
+        user_id: 6,
+        category: "Equipment",
+        image_url: "roller.jpg",
+        status: "ACTIVE",
+      },
     ],
   });
 
@@ -752,6 +872,11 @@ async function main() {
       { user_id: 3, total_price: 30.0 },
       { user_id: 4, total_price: 80.0 },
       { user_id: 5, total_price: 150.0 },
+      { user_id: 1, total_price: 20.0 },
+      { user_id: 2, total_price: 15.0 },
+      { user_id: 3, total_price: 40.0 },
+      { user_id: 4, total_price: 25.0 },
+      { user_id: 5, total_price: 120.0 },
     ],
   });
 
@@ -763,6 +888,11 @@ async function main() {
       { order_id: 3, product_id: 3, quantity: 1, price: 30.0 },
       { order_id: 4, product_id: 4, quantity: 1, price: 80.0 },
       { order_id: 5, product_id: 5, quantity: 1, price: 150.0 },
+      { order_id: 6, product_id: 6, quantity: 1, price: 20.0 },
+      { order_id: 7, product_id: 7, quantity: 1, price: 15.0 },
+      { order_id: 8, product_id: 8, quantity: 1, price: 40.0 },
+      { order_id: 9, product_id: 9, quantity: 1, price: 25.0 },
+      { order_id: 10, product_id: 10, quantity: 1, price: 120.0 },
     ],
   });
 
@@ -774,6 +904,11 @@ async function main() {
       { user_id: 3, product_id: 3, quantity: 1 },
       { user_id: 4, product_id: 4, quantity: 1 },
       { user_id: 5, product_id: 5, quantity: 1 },
+      { user_id: 1, product_id: 6, quantity: 1 },
+      { user_id: 2, product_id: 7, quantity: 1 },
+      { user_id: 3, product_id: 8, quantity: 1 },
+      { user_id: 4, product_id: 9, quantity: 1 },
+      { user_id: 5, product_id: 10, quantity: 1 },
     ],
   });
 
@@ -785,6 +920,11 @@ async function main() {
       { user_id: 3, product_id: 3 },
       { user_id: 4, product_id: 4 },
       { user_id: 5, product_id: 5 },
+      { user_id: 1, product_id: 6 },
+      { user_id: 2, product_id: 7 },
+      { user_id: 3, product_id: 8 },
+      { user_id: 4, product_id: 9 },
+      { user_id: 5, product_id: 10 },
     ],
   });
 

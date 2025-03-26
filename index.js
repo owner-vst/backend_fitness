@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import adminRouter from "./routes/adminRouter.js";
 import { verifyToken } from "./middlewares/verifyToken.js";
 import commonRouter from "./routes/commonRouter.js";
+import userRouter from "./routes/userRouter.js";
 
 const app = express();
 app.use(bodyParser.json());
@@ -13,6 +14,7 @@ app.use(cookieParser());
 app.use("/api/auth", authRouter);
 app.use("/api/admin", adminRouter);
 app.use("/common", commonRouter);
+app.use("/api/user",userRouter)
 app.get("/", (req, res) => {
   res.send("Hello World");
 });

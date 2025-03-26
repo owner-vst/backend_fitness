@@ -121,6 +121,7 @@ model WorkoutLog {
   date          DateTime
   activity_id   Int
   duration      Int
+  status       WorkoutStatus @default(PENDING)
   
   user          User      @relation(fields: [user_id], references: [id])
   activity      Activity  @relation(fields: [activity_id], references: [id])
@@ -171,6 +172,8 @@ model FoodLog {
   date      DateTime
   food_id   Int
   quantity  Float
+  meal_type MealType
+  status    DietStatus @default(PENDING)
   user      User      @relation(fields: [user_id], references: [id])
   food      FoodCatalogue @relation(fields: [food_id], references: [id])
 }

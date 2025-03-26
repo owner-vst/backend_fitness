@@ -313,6 +313,7 @@ const createWorkoutLogSchema = z.object({
     message: "Invalid date format",
   }),
   duration: z.number().int().positive(),
+  status: z.enum(["COMPLETED", "SKIPPED", "PENDING"]),
 });
 
 export const createWorkoutLog = async (req, res) => {
@@ -320,7 +321,7 @@ export const createWorkoutLog = async (req, res) => {
     // Validate request body with Zod schema
     const validatedBody = createWorkoutLogSchema.parse(req.body);
 
-    const { user_id, activity_id, date, duration } = validatedBody;
+    const { user_id, activity_id, date, duration, status } = validatedBody;
 
     const workoutLog = await prisma.workoutLog.create({
       data: {
@@ -328,6 +329,7 @@ export const createWorkoutLog = async (req, res) => {
         activity_id,
         date: new Date(date),
         duration,
+        status,
       },
     });
 
@@ -350,6 +352,7 @@ const updateWorkoutLogSchema = z.object({
     })
     .optional(),
   duration: z.number().int().positive().optional(),
+  status: z.enum(["COMPLETED", "SKIPPED", "PENDING"]).optional(),
 });
 
 export const updateWorkoutLog = async (req, res) => {
@@ -435,6 +438,23 @@ export const deleteWorkoutLog = async (req, res) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ success: false, message: error.errors });
     }
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+export const getWorkoutLogsByUser = async (req, res) => {
+  const { userId } = req.userId;
+
+  try {
+    const workoutLogs = await prisma.workoutLog.findMany({
+      where: { user_id: parseInt(userId) },
+      include: {
+        user: true, // Include user details if needed
+        activity: true, // Include activity details if needed
+      },
+    });
+
+    res.status(200).json({ success: true, workoutLogs });
+  } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };

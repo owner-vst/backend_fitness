@@ -388,12 +388,16 @@ const createFoodLogSchema = z.object({
   food_id: z.number().min(1, "Food ID is required"),
   quantity: z.number().min(0.1, "Quantity must be greater than 0"),
   date: z.string().datetime(),
+  meal_type: z.enum(["BREAKFAST", "LUNCH", "DINNER", "SNACK"]),
+  status: z.enum(["PENDING", "COMPLETED", "SKIPPED"]),
 });
 
 // Schema for updating a FoodLog entry
 const updateFoodLogSchema = z.object({
   quantity: z.number().min(0.1, "Quantity must be greater than 0").optional(),
   date: z.string().datetime().optional(),
+  status: z.enum(["PENDING", "COMPLETED", "SKIPPED"]).optional(),
+  meal_type: z.enum(["BREAKFAST", "LUNCH", "DINNER", "SNACK"]).optional(),
 });
 
 // Create a new food log
@@ -411,6 +415,8 @@ export const createFoodLog = async (req, res) => {
         food_id: parsedBody.food_id,
         quantity: parsedBody.quantity,
         date: new Date(parsedBody.date),
+        meal_type: parsedBody.meal_type,
+        status: parsedBody.status,
       },
     });
 
@@ -454,6 +460,8 @@ export const updateFoodLog = async (req, res) => {
       data: {
         quantity: parsedBody.quantity || foodLog.quantity,
         date: parsedBody.date ? new Date(parsedBody.date) : foodLog.date,
+        meal_type: parsedBody.meal_type || foodLog.meal_type,
+        status: parsedBody.status || foodLog.status,
       },
     });
 
