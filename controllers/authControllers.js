@@ -133,7 +133,7 @@ export const verifyEmail = async (req, res) => {
       },
     });
 
-    await sendWelcomeEmail(user.email, user.firstname);
+    await sendWelcomeEmail(user.email, user.first_name);
 
     res.status(200).json({
       success: true,
