@@ -7,8 +7,8 @@ import {
 
 // Nodemailer transporter setup
 const transporter = nodemailer.createTransport({
-  host: "sandbox.smtp.mailtrap.io", // Use your SMTP host
-  port: 587, // Use the appropriate port
+  host: "mail.akg7547.uta.cloud", // Use your SMTP host
+  port: 465, // Use the appropriate port
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
