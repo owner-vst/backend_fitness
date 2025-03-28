@@ -18,7 +18,7 @@ const transporter = nodemailer.createTransport({
 const sender = "no-reply@yourdomain.com"; // Replace with your sender email
 
 export const sendVerificationEmail = async (email, verificationToken) => {
-  const verificationUrl = `${process.env.FRONTEND_URL}/auth/verify?token=${verificationToken}&email=${email}`;
+  const verificationUrl = `${process.env.CLIENT_URL}/auth/verify?token=${verificationToken}&email=${email}`;
   const message = {
     from: sender,
     to: email,
@@ -57,12 +57,12 @@ export const sendWelcomeEmail = async (email, name) => {
   }
 };
 
-export const sendPasswordResetEmail = async (email, resetURL) => {
+export const sendPasswordResetEmail = async (email, resetToken) => {
   const message = {
     from: sender,
     to: email,
     subject: "Reset your password",
-    html: PASSWORD_RESET_REQUEST_TEMPLATE.replace("{resetURL}", resetURL),
+    html: PASSWORD_RESET_REQUEST_TEMPLATE.replace("{resetToken}", resetToken),
   };
 
   try {

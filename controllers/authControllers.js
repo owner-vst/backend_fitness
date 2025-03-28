@@ -44,7 +44,13 @@ const forgotPasswordSchema = z.object({
 });
 
 const resetPasswordSchema = z.object({
-  password: z.string().min(8),
+  token: z
+    .string()
+    .min(6, { message: "The verification code must be exactly 6 digits." })
+    .max(6, { message: "The verification code must be exactly 6 digits." }), // Assuming 6-digit verification code
+  newPassword: z
+    .string()
+    .min(8, { message: "Password must be at least 8 characters long." }),
 });
 
 export const signup = async (req, res) => {
@@ -78,7 +84,7 @@ export const signup = async (req, res) => {
         gender,
         dob: new Date(dob),
         profilePic,
-        role_id: 2,
+        role_id: 3,
         verificationToken,
         status: "ACTIVE",
         created_at: new Date(),
@@ -138,10 +144,10 @@ export const verifyEmail = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Email verified successfully",
-      user: {
-        ...user,
-        password_hash: undefined,
-      },
+      // user: {
+      //   ...user,
+      //   password_hash: undefined,
+      // },
     });
   } catch (error) {
     console.log("error in verifyEmail ", error);
@@ -230,7 +236,8 @@ export const forgotPassword = async (req, res) => {
     }
 
     // Generate reset token
-    const resetToken = crypto.randomBytes(20).toString("hex");
+    // const resetToken = crypto.randomBytes(20).toString("hex");
+    const resetToken = generateOtp();
     const resetPasswordExpiresAt = new Date(Date.now() + 1 * 60 * 60 * 1000); // 1 hour
 
     await prisma.user.update({
@@ -242,10 +249,7 @@ export const forgotPassword = async (req, res) => {
     });
 
     // send email
-    await sendPasswordResetEmail(
-      user.email,
-      `${process.env.CLIENT_URL}/reset-password/${resetToken}`
-    );
+    await sendPasswordResetEmail(user.email, resetToken);
     console.log("token", resetToken);
     res.status(200).json({
       success: true,
@@ -259,10 +263,8 @@ export const forgotPassword = async (req, res) => {
 
 export const resetPassword = async (req, res) => {
   try {
-    const { token } = req.params;
-    console.log("token", token);
     const parsedBody = resetPasswordSchema.parse(req.body);
-    const { password } = parsedBody;
+    const { token, newPassword } = parsedBody;
 
     const user = await prisma.user.findFirst({
       where: {
@@ -278,7 +280,7 @@ export const resetPassword = async (req, res) => {
     }
 
     // update password
-    const hashedPassword = await bcryptjs.hash(password, 10);
+    const hashedPassword = await bcryptjs.hash(newPassword, 10);
 
     await prisma.user.update({
       where: { id: user.id },
@@ -295,7 +297,13 @@ export const resetPassword = async (req, res) => {
       .status(200)
       .json({ success: true, message: "Password reset successful" });
   } catch (error) {
-    console.log("Error in resetPassword ", error);
+    console.log("Error in resetPassword ", error.message);
+    if (error instanceof z.ZodError) {
+      const errorMessages = error.errors.map((err) => err.message);
+      return res
+        .status(400)
+        .json({ success: false, message: errorMessages.join(", ") });
+    }
     res.status(400).json({ success: false, message: error.message });
   }
 };

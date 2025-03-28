@@ -79,6 +79,8 @@ model UserProfile {
   activity_type ActivityType
   goal          Goal
   updated_at    DateTime  @default(now())
+  address String
+  phone String
   user          User      @relation(fields: [user_id], references: [id])
 }
 

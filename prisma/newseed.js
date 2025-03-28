@@ -233,6 +233,8 @@ async function main() {
         blood_group: "A_POSITIVE",
         activity_type: "MODERATE",
         goal: "MAINTAIN",
+        phone: "123-456-7890",
+        address: "123 Main St, Anytown, USA",
       },
       {
         user_id: 2,
@@ -241,6 +243,8 @@ async function main() {
         blood_group: "B_POSITIVE",
         activity_type: "ACTIVE",
         goal: "GAIN",
+        phone: "456-789-1234",
+        address: "456 Elm St, Anytown, USA",
       },
       {
         user_id: 3,
@@ -249,6 +253,8 @@ async function main() {
         blood_group: "O_POSITIVE",
         activity_type: "LAZY",
         goal: "LOSE",
+        phone: "789-123-4567",
+        address: "789 Oak St, Anytown, USA",
       },
       {
         user_id: 4,
@@ -257,6 +263,8 @@ async function main() {
         blood_group: "AB_POSITIVE",
         activity_type: "SPORTS_PERSON",
         goal: "MAINTAIN",
+        phone: "123-456-7890",
+        address: "987 Pine St, Anytown, USA",
       },
       {
         user_id: 5,
@@ -264,7 +272,9 @@ async function main() {
         weight: 65,
         blood_group: "A_NEGATIVE",
         activity_type: "MODERATE",
+        phone: "456-789-1234",
         goal: "GAIN",
+        address: "123 Main St, Anytown, USA",
       },
       {
         user_id: 6,
@@ -273,6 +283,8 @@ async function main() {
         blood_group: "B_NEGATIVE",
         activity_type: "ACTIVE",
         goal: "LOSE",
+        phone: "789-123-4567",
+        address: "456 Elm St, Anytown, USA",
       },
       {
         user_id: 7,
@@ -280,7 +292,9 @@ async function main() {
         weight: 85,
         blood_group: "O_NEGATIVE",
         activity_type: "LAZY",
+        phone: "123-456-7890",
         goal: "MAINTAIN",
+        address: "789 Oak St, Anytown, USA",
       },
     ],
   });

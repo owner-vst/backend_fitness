@@ -23,7 +23,7 @@ authRouter.post("/verify-otp", verifyOtp);
 authRouter.post("/verify-email", verifyEmail);
 authRouter.post("/forgot-password", forgotPassword);
 
-authRouter.post("/reset-password/:token", resetPassword);
+authRouter.post("/reset-password", resetPassword);
 
 authRouter.post('/manage-users', verifyToken, checkPermissions(['CREATE_PRODUCT']), (req, res) => {
     res.send('Admin can manage users');

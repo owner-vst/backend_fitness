@@ -3,132 +3,171 @@ import { PrismaClient, BloodGroup, ActivityType, Goal } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-// Schema for creating a profile
-const createProfileSchema = z.object({
-  user_id: z.number().min(1, "User ID is required"),
-  height: z.number().positive("Height must be a positive number"),
-  weight: z.number().positive("Weight must be a positive number"),
-  blood_group: z.enum([
-    BloodGroup.A_POSITIVE,
-    BloodGroup.A_NEGATIVE,
-    BloodGroup.B_POSITIVE,
-    BloodGroup.B_NEGATIVE,
-    BloodGroup.O_POSITIVE,
-    BloodGroup.O_NEGATIVE,
-    BloodGroup.AB_POSITIVE,
-    BloodGroup.AB_NEGATIVE,
-  ]), // BloodGroup enum values
-  activity_type: z.enum([
-    ActivityType.MODERATE,
-    ActivityType.LAZY,
-    ActivityType.ACTIVE,
-    ActivityType.SPORTS_PERSON,
-  ]), // ActivityType enum values
-  goal: z.enum([Goal.GAIN, Goal.LOSE, Goal.MAINTAIN]), // Goal enum values
+const updateUserSchema = z.object({
+  // Fields for updating the User table
+  // userId: z.number().min(1, { message: "User ID is required" }),
+  firstName: z.string().min(1, { message: "First Name is required" }),
+  lastName: z.string().min(1, { message: "Last Name is required" }),
+  email: z.string().email({ message: "Invalid email format" }).optional(), // Email is optional for update
+  dob: z
+    .string()
+    .refine((date) => !isNaN(new Date(date).getTime()), {
+      message: "Invalid date of birth",
+    })
+    .optional(),
+  gender: z
+    .enum(["Male", "Female", "Other"], { message: "Invalid gender" })
+    .optional(),
+  profilePic: z.string().optional(),
+
+  // Fields for updating the UserProfile table
+  phone: z.string().min(1, { message: "Phone number is required" }).optional(),
+  bloodGroup: z
+    .enum(
+      [
+        "A_POSITIVE",
+        "A_NEGATIVE",
+        "B_POSITIVE",
+        "B_NEGATIVE",
+        "AB_POSITIVE",
+        "AB_NEGATIVE",
+        "O_POSITIVE",
+        "O_NEGATIVE",
+      ],
+      {
+        message: "Invalid blood group",
+      }
+    )
+    .optional(),
+  activityType: z
+    .enum(["SPORTS_PERSON", "MODERATE", "LAZY", "ACTIVE"], {
+      message: "Invalid activity type",
+    })
+    .optional(),
+  goal: z
+    .enum(["LOSE", "MAINTAIN", "GAIN"], {
+      message: "Invalid goal",
+    })
+    .optional(),
+  address: z.string().min(1, { message: "Address is required" }).optional(),
+  height: z
+    .number()
+    .min(0, { message: "Height must be a positive number" })
+    .optional(),
+  weight: z
+    .number()
+    .min(0, { message: "Weight must be a positive number" })
+    .optional(),
 });
 
-export const createProfile = async (req, res) => {
-  const { body } = req;
-
+// Update or Create Profile API
+export const updateUserProfile = async (req, res) => {
   try {
-    // Validate the request body
-    const parsedBody = createProfileSchema.parse(body);
-
-    // Create a new user profile
-    const userProfile = await prisma.userProfile.create({
-      data: {
-        user_id: parsedBody.user_id,
-        height: parsedBody.height,
-        weight: parsedBody.weight,
-        blood_group: parsedBody.blood_group,
-        activity_type: parsedBody.activity_type,
-        goal: parsedBody.goal,
-        updated_at: new Date(),
-      },
+    // Parse and validate incoming data using Zod
+    const {
+      //  userId,
+      firstName,
+      lastName,
+      email,
+      dob,
+      gender,
+      profilePic,
+      phone,
+      bloodGroup,
+      activityType,
+      goal,
+      address,
+      height,
+      weight,
+    } = updateUserSchema.parse(req.body);
+    const userId = req.userId;
+    // Ensure the user exists in the User table
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
     });
 
-    return res.status(201).json({
-      success: true,
-      message: "Profile created successfully",
-      userProfile,
-    });
-  } catch (error) {
-    return res.status(400).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-// Schema for updating a profile
-const updateProfileSchema = z.object({
-  height: z.number().positive("Height must be a positive number").optional(),
-  weight: z.number().positive("Weight must be a positive number").optional(),
-  blood_group: z
-    .enum([
-      BloodGroup.A_POSITIVE,
-      BloodGroup.A_NEGATIVE,
-      BloodGroup.B_POSITIVE,
-      BloodGroup.B_NEGATIVE,
-      BloodGroup.O_POSITIVE,
-      BloodGroup.O_NEGATIVE,
-      BloodGroup.AB_POSITIVE,
-      BloodGroup.AB_NEGATIVE,
-    ])
-    .optional(),
-  activity_type: z
-    .enum([
-      ActivityType.MODERATE,
-      ActivityType.LAZY,
-      ActivityType.ACTIVE,
-      ActivityType.SPORTS_PERSON,
-    ])
-    .optional(),
-  goal: z.enum([Goal.GAIN, Goal.LOSE, Goal.MAINTAIN]).optional(),
-});
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
 
-export const updateProfile = async (req, res) => {
-  const { id } = req.params; // ID of the user profile to update
-  const { body } = req;
+    // Start a Prisma transaction to update both User and UserProfile tables
+    const updateData = {};
 
-  try {
-    // Validate the request body
-    const parsedBody = updateProfileSchema.parse(body);
+    if (firstName) updateData.first_name = firstName;
+    if (lastName) updateData.last_name = lastName;
+    updateData.name = `${firstName} ${lastName}`;
+    if (email) updateData.email = email;
+    if (dob) updateData.dob = new Date(dob);
+    if (gender) updateData.gender = gender;
+    if (profilePic) updateData.profilePic = profilePic;
 
-    // Find the user profile by user_id
-    const userProfile = await prisma.userProfile.findUnique({
-      where: { user_id: parseInt(id) },
+    // Update the user table
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: updateData,
     });
 
-    if (!userProfile) {
-      return res.status(404).json({
-        success: false,
-        message: "User profile not found",
+    // Check if the user already has a profile
+    const existingProfile = await prisma.userProfile.findUnique({
+      where: { user_id: userId },
+    });
+
+    let updatedProfile;
+
+    if (existingProfile) {
+      // Update the existing profile
+      updatedProfile = await prisma.userProfile.update({
+        where: { user_id: userId },
+        data: {
+          phone,
+          blood_group: bloodGroup,
+          activity_type: activityType,
+          goal,
+          address,
+          height,
+          weight,
+          updated_at: new Date(),
+        },
+      });
+    } else {
+      // Create a new profile if not exists
+      updatedProfile = await prisma.userProfile.create({
+        data: {
+          user_id: userId,
+          phone,
+          blood_group: bloodGroup,
+          activity_type: activityType,
+          goal,
+          address,
+          height,
+          weight,
+        },
       });
     }
 
-    // Update the profile
-    const updatedProfile = await prisma.userProfile.update({
-      where: { user_id: parseInt(id) },
-      data: {
-        height: parsedBody.height ?? userProfile.height,
-        weight: parsedBody.weight ?? userProfile.weight,
-        blood_group: parsedBody.blood_group ?? userProfile.blood_group,
-        activity_type: parsedBody.activity_type ?? userProfile.activity_type,
-        goal: parsedBody.goal ?? userProfile.goal,
-        updated_at: new Date(),
-      },
-    });
-
     return res.status(200).json({
       success: true,
-      message: "Profile updated successfully",
-      userProfile: updatedProfile,
+      message: "User and profile updated successfully",
+      user: updatedUser,
+      profile: updatedProfile,
     });
   } catch (error) {
-    return res.status(400).json({
-      success: false,
-      message: error.message,
-    });
+    console.error("Error in updateUserProfile:", error);
+
+    // Handle Zod validation errors
+    if (error instanceof z.ZodError) {
+      const errorMessages = error.errors.map((e) => e.message);
+      return res
+        .status(400)
+        .json({ success: false, message: errorMessages.join(", ") });
+    }
+
+    // Handle other errors
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
   }
 };
 export const getUserProfile = async (req, res) => {

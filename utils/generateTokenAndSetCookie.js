@@ -12,6 +12,6 @@ export const generateTokenAndSetCookie = (res, userId) => {
     sameSite: "none",
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
-  console.log("token in setcookie fun ", token);
+  //console.log("token in setcookie fun ", token);
   return token;
 };
