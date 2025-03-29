@@ -16,6 +16,6 @@ commonRouter.get("/get-convo", verifyToken, getConversation);
 commonRouter.post("/send-message", verifyToken, sendMessage);
 commonRouter.get("/get-last-message", verifyToken, getLastMessages);
 
-commonRouter.put("/update-profile", verifyToken, updateUserProfile);
+commonRouter.post("/update-profile", verifyToken, updateUserProfile);
 commonRouter.get("/get-profile", verifyToken, getUserProfile);
 export default commonRouter;

@@ -107,6 +107,20 @@ async function main() {
         role_id: 1,
         status: "ACTIVE",
       },
+      {
+        first_name: "Testing",
+        last_name: "Fitness",
+        name: "Testing Fitness",
+        email: "owner.reliance@gmail.com",
+        dob: new Date("1995-05-05"),
+        gender: "Male",
+        password_hash:
+          "$2b$10$NLtMJ8HTOFGRBb5tnFypAulqU6NXaA6bGXp9njzPKDMp7oDwf/Euu",
+        created_at: new Date(),
+        updated_at: new Date(),
+        role_id: 3,
+        status: "ACTIVE",
+      },
     ],
   });
 
@@ -295,6 +309,16 @@ async function main() {
         phone: "123-456-7890",
         goal: "MAINTAIN",
         address: "789 Oak St, Anytown, USA",
+      },
+      {
+        user_id: 8,
+        height: 175,
+        weight: 75,
+        blood_group: "AB_POSITIVE",
+        activity_type: "SPORTS_PERSON",
+        phone: "456-789-1234",
+        goal: "GAIN",
+        address: "987 Pine St, Anytown, USA",
       },
     ],
   });

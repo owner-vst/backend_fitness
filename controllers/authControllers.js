@@ -343,15 +343,14 @@ export const verifyOtp = async (req, res) => {
       where: { id: parseInt(userId), otp },
     });
 
-    const role = await prisma.role.findUnique({
-      where: { id: user.role_id },
-    });
     if (!user || user.otpExpiresAt < new Date()) {
       return res
         .status(400)
         .json({ success: false, message: "Invalid or expired OTP" });
     }
-
+    const role = await prisma.role.findUnique({
+      where: { id: user.role_id },
+    });
     // OTP is valid, generate JWT token
     const token = generateTokenAndSetCookie(res, user.id);
 

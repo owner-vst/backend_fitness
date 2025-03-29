@@ -176,6 +176,11 @@ export const getUserProfile = async (req, res) => {
     const userId = req.userId;
 
     // Find the user's profile
+    const user = await prisma.user.findUnique({
+      where: {
+        id: userId, // Use the user ID to find the profile
+      },
+    });
     const userProfile = await prisma.userProfile.findUnique({
       where: {
         user_id: userId, // Use the user ID to find the profile
@@ -193,6 +198,7 @@ export const getUserProfile = async (req, res) => {
       success: true,
       message: "User profile retrieved successfully",
       profile: userProfile,
+      user: user,
     });
   } catch (error) {
     console.error(error);
