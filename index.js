@@ -10,25 +10,27 @@ import commonRouter from "./routes/commonRouter.js";
 import userRouter from "./routes/userRouter.js";
 dotenv.config();
 const app = express();
-app.use(
-  cors({
-    origin: "http://localhost:5173", // Allow only your frontend domain
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+app.use(express.json());
+app.use(cookieParser());
 app.use(bodyParser.json());
+// app.use(
+//   cors({
+//     origin: "http://localhost:5173", // Allow only your frontend domain
+//     methods: ["GET", "POST", "PUT", "DELETE"],
+//     allowedHeaders: ["Content-Type", "Authorization"],
+//   })
+// );
+
 app.use(
   cors({
-    origin: "http://localhost:5173", // Your frontend URL
+    origin: "http://insightstracker.com", // Your frontend URL
     credentials: true, // Allow credentials (cookies, etc.)
   })
 );
-app.use(express.json());
-app.use(cookieParser());
+//app.use(cors());
 app.use("/api/auth", authRouter);
 app.use("/api/admin", adminRouter);
-app.use("/common", commonRouter);
+app.use("/api/common", commonRouter);
 app.use("/api/user", userRouter);
 app.get("/", (req, res) => {
   res.send("Hello World");
