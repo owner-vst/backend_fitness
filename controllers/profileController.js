@@ -180,6 +180,17 @@ export const getUserProfile = async (req, res) => {
       where: {
         id: userId, // Use the user ID to find the profile
       },
+      select: {
+        id: true,
+        name: true,
+        first_name: true,
+        last_name: true,
+        email: true,
+        dob: true,
+        gender: true,
+        profilePic: true,
+        created_at: true,
+      },
     });
     const userProfile = await prisma.userProfile.findUnique({
       where: {
@@ -188,9 +199,11 @@ export const getUserProfile = async (req, res) => {
     });
 
     if (!userProfile) {
-      return res.status(404).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: "User profile not found",
+        profile: null,
+        user:user
       });
     }
 
