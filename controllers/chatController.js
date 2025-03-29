@@ -141,7 +141,7 @@ export const getLastMessages = async (req, res) => {
       const unreadMessages = conversations.filter(
         (conv) =>
           conv.receiver_id == currentUser.userId &&
-          !conv.read &&
+          conv.status === "SENT" &&
           conv.sender_id == userId
       );
 
@@ -150,6 +150,7 @@ export const getLastMessages = async (req, res) => {
           id: userId,
         },
         select: {
+          id: true,
           first_name: true,
           profilePic: true,
         },
@@ -237,6 +238,33 @@ export const getConversation = async (req, res) => {
     }));
 
     return res.status(200).json(formattedMessages); // Return the formatted messages as the response
+  } catch (error) {
+    console.error("Error fetching conversation:", error);
+    return res.status(500).json({
+      message: "Error fetching conversation",
+      error: error.message,
+    });
+  }
+};
+export const getUsersList = async (req, res) => {
+  try {
+    const currentUser = req.user;
+    if (!currentUser) {
+      return res.status(401).json({ message: "User not authenticated" });
+    }
+    const users = await prisma.user.findMany({
+      where: {
+        id: {
+          not: currentUser.userId,
+        },
+      },
+      select: {
+        id: true,
+        profilePic: true,
+        first_name: true,
+      },
+    });
+    return res.status(200).json(users);
   } catch (error) {
     console.error("Error fetching conversation:", error);
     return res.status(500).json({
