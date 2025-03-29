@@ -262,6 +262,7 @@ export const getUsersList = async (req, res) => {
         id: true,
         profilePic: true,
         first_name: true,
+        email: true,
       },
     });
     return res.status(200).json(users);
