@@ -175,6 +175,20 @@ const workoutPlanItemSchema = z.object({
   activity_id: z.number().int(),
   duration: z.number().int(),
   status: z.enum(["PENDING", "COMPLETED", "SKIPPED"]),
+  user_id: z.number().int(), // Added user_id
+  plan_type: z.enum(["AI", "USER"]), // Example plan_type, adjust as needed
+  date: z.string().datetime(), // Ensure the date is in a valid datetime format
+  created_by_id: z.number().int(), // Added created_by_id
+});
+const UpdateWorkoutPlanItemSchema = z.object({
+  workout_plan_id: z.number().int().optional(), // Optional, as it's not required to update
+  activity_id: z.number().int().optional(), // Optional, as it's not required to update
+  duration: z.number().int().optional(), // Optional, as it's not required to update
+  status: z.enum(["PENDING", "COMPLETED", "SKIPPED"]).optional(), // Optional, as it's not required to update
+  user_id: z.number().int().optional(), // Optional, as it's not required to update
+  plan_type: z.enum(["AI", "USER"]).optional(), // Optional, as it's not required to update
+  date: z.string().datetime().optional(), // Optional, as it's not required to update
+  created_by_id: z.number().int().optional(), // Optional, as created_by_id typically should not be updated
 });
 
 export const createWorkoutPlanItem = async (req, res) => {
@@ -189,6 +203,10 @@ export const createWorkoutPlanItem = async (req, res) => {
         activity_id: parsedBody.activity_id,
         duration: parsedBody.duration,
         status: parsedBody.status,
+        user_id: parsedBody.user_id, // Added user_id
+        plan_type: parsedBody.plan_type, // Added plan_type
+        date: parsedBody.date, // Added date
+        created_by_id: parsedBody.created_by_id, // Assuming user is authenticated and their ID is stored in `req.user.id`
       },
     });
 
@@ -213,6 +231,8 @@ export const getWorkoutPlanItem = async (req, res) => {
       include: {
         workout_plan: true, // Include workout plan details
         activity: true, // Include activity details
+        user: true, // Include user details
+        created_by: true, // Include the user who created this item
       },
     });
 
@@ -242,6 +262,8 @@ export const getAllWorkoutPlanItems = async (req, res) => {
       include: {
         workout_plan: true, // Include workout plan details
         activity: true, // Include activity details
+        user: true, // Include user details
+        created_by: true, // Include the user who created this item
       },
     });
 
@@ -261,7 +283,7 @@ export const updateWorkoutPlanItem = async (req, res) => {
   const { id } = req.params; // Get the workout plan item ID from the URL params
   try {
     // Validate the request body
-    const parsedBody = workoutPlanItemSchema.parse(req.body);
+    const parsedBody = UpdateWorkoutPlanItemSchema.parse(req.body);
 
     // Update the workout plan item
     const updatedWorkoutPlanItem = await prisma.workoutPlanItem.update({
@@ -271,6 +293,11 @@ export const updateWorkoutPlanItem = async (req, res) => {
         activity_id: parsedBody.activity_id,
         duration: parsedBody.duration,
         status: parsedBody.status,
+        user_id: parsedBody.user_id, // Updated user_id
+        plan_type: parsedBody.plan_type, // Updated plan_type
+        date: parsedBody.date, // Updated date
+        created_by_id: parsedBody.created_by_id, // Assuming user is authenticated and their ID is stored in `req.user.id`
+        // created_by_id is not updated; it's immutable
       },
     });
 
@@ -285,6 +312,7 @@ export const updateWorkoutPlanItem = async (req, res) => {
     });
   }
 };
+
 export const deleteWorkoutPlanItem = async (req, res) => {
   const { id } = req.params; // Get the workout plan item ID from the URL params
   try {
@@ -303,158 +331,5 @@ export const deleteWorkoutPlanItem = async (req, res) => {
       success: false,
       message: error.message,
     });
-  }
-};
-
-const createWorkoutLogSchema = z.object({
-  user_id: z.number().int().positive(),
-  activity_id: z.number().int().positive(),
-  date: z.string().refine((val) => !isNaN(Date.parse(val)), {
-    message: "Invalid date format",
-  }),
-  duration: z.number().int().positive(),
-  status: z.enum(["COMPLETED", "SKIPPED", "PENDING"]),
-});
-
-export const createWorkoutLog = async (req, res) => {
-  try {
-    // Validate request body with Zod schema
-    const validatedBody = createWorkoutLogSchema.parse(req.body);
-
-    const { user_id, activity_id, date, duration, status } = validatedBody;
-
-    const workoutLog = await prisma.workoutLog.create({
-      data: {
-        user_id,
-        activity_id,
-        date: new Date(date),
-        duration,
-        status,
-      },
-    });
-
-    res.status(201).json({ success: true, workoutLog });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ success: false, message: error.errors });
-    }
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-const updateWorkoutLogSchema = z.object({
-  user_id: z.number().int().positive().optional(),
-  activity_id: z.number().int().positive().optional(),
-  date: z
-    .string()
-    .refine((val) => !isNaN(Date.parse(val)), {
-      message: "Invalid date format",
-    })
-    .optional(),
-  duration: z.number().int().positive().optional(),
-  status: z.enum(["COMPLETED", "SKIPPED", "PENDING"]).optional(),
-});
-
-export const updateWorkoutLog = async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    // Validate request body with Zod schema
-    const validatedBody = updateWorkoutLogSchema.parse(req.body);
-
-    const workoutLog = await prisma.workoutLog.update({
-      where: { id: parseInt(id) },
-      data: validatedBody, // Only update the fields that were provided
-    });
-
-    res.status(200).json({ success: true, workoutLog });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ success: false, message: error.errors });
-    }
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-const getWorkoutLogSchema = z.object({
-  id: z.number().int().positive(),
-});
-
-export const getWorkoutLog = async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    // Validate the ID parameter with Zod schema
-    getWorkoutLogSchema.parse({ id: parseInt(id) });
-
-    const workoutLog = await prisma.workoutLog.findUnique({
-      where: { id: parseInt(id) },
-    });
-
-    if (!workoutLog) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Workout log not found" });
-    }
-
-    res.status(200).json({ success: true, workoutLog });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ success: false, message: error.errors });
-    }
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-export const getAllWorkoutLogs = async (req, res) => {
-  try {
-    // Fetch all workout logs
-    const workoutLogs = await prisma.workoutLog.findMany({
-      include: {
-        user: true, // Include user details if needed
-        activity: true, // Include activity details if needed
-      },
-    });
-
-    res.status(200).json({ success: true, workoutLogs });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-export const deleteWorkoutLog = async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    // Validate the ID parameter with Zod schema
-    getWorkoutLogSchema.parse({ id: parseInt(id) });
-
-    await prisma.workoutLog.delete({
-      where: { id: parseInt(id) },
-    });
-
-    res
-      .status(200)
-      .json({ success: true, message: "Workout Log deleted successfully" });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ success: false, message: error.errors });
-    }
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-export const getWorkoutLogsByUser = async (req, res) => {
-  const { userId } = req.userId;
-
-  try {
-    const workoutLogs = await prisma.workoutLog.findMany({
-      where: { user_id: parseInt(userId) },
-      include: {
-        user: true, // Include user details if needed
-        activity: true, // Include activity details if needed
-      },
-    });
-
-    res.status(200).json({ success: true, workoutLogs });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
   }
 };

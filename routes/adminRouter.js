@@ -9,18 +9,13 @@ import {
 } from "../controllers/adminController.js";
 import {
   createActivity,
-  createWorkoutLog,
   createWorkoutPlanItem,
   deleteActivity,
-  deleteWorkoutLog,
   deleteWorkoutPlanItem,
   getAllActivities,
-  getAllWorkoutLogs,
   getAllWorkoutPlanItems,
-  getWorkoutLog,
   getWorkoutPlanItem,
   modifyActivity,
-  updateWorkoutLog,
   updateWorkoutPlanItem,
 } from "../controllers/workoutController.js";
 import {
@@ -38,20 +33,14 @@ import {
 import {
   createDietPlanItem,
   createFoodCatalogue,
-  createFoodLog,
   deleteDietPlanItem,
   deleteFoodCatalogue,
-  deleteFoodLog,
   getAllDietPlanItems,
   getAllFoodCatalogue,
-  getAllFoodLogs,
-  getAllFoodLogsforUser,
   getFoodCatalogueById,
   modifyFoodCatalogue,
   updateDietPlanItem,
-  updateFoodLog,
   viewDietPlanItem,
-  viewFoodLog,
 } from "../controllers/dietController.js";
 import {
   createProduct,
@@ -198,36 +187,6 @@ adminRouter.delete(
   deleteWorkoutPlanItem
 );
 
-adminRouter.post(
-  "/create-workout-log",
-  verifyToken,
-  checkPermissions(["CREATE_WORKOUT_LOG"]),
-  createWorkoutLog
-);
-adminRouter.get(
-  "/get-workout-logs",
-  verifyToken,
-  checkPermissions(["VIEW_WORKOUT_LOG"]),
-  getAllWorkoutLogs
-);
-adminRouter.get(
-  "/get-workout-log/:id",
-  verifyToken,
-  checkPermissions(["VIEW_WORKOUT_LOG"]),
-  getWorkoutLog
-);
-adminRouter.put(
-  "/update-workout-log/:id",
-  verifyToken,
-  checkPermissions(["MODIFY_WORKOUT_LOG"]),
-  updateWorkoutLog
-);
-adminRouter.delete(
-  "/delete-workout-log/:id",
-  verifyToken,
-  checkPermissions(["DELETE_WORKOUT_LOG"]),
-  deleteWorkoutLog
-);
 // DietItem routes
 adminRouter.post(
   "/create-food-item",
@@ -331,47 +290,6 @@ adminRouter.delete(
   verifyToken,
   checkPermissions(["DELETE_DIET_ITEM"]),
   deleteDietPlanItem
-);
-
-//diet-log
-adminRouter.post(
-  "/create-diet-log",
-  verifyToken,
-  checkPermissions(["CREATE_DIET_LOG"]),
-  createFoodLog
-);
-
-adminRouter.put(
-  "/update-diet-log/:id",
-  verifyToken,
-  checkPermissions(["MODIFY_DIET_LOG"]),
-  updateFoodLog
-);
-
-adminRouter.get(
-  "/get-diet-log/:id",
-  verifyToken,
-  checkPermissions(["VIEW_DIET_LOG"]),
-  viewFoodLog
-);
-adminRouter.get(
-  "/get-user-diet-logs/:userId",
-  verifyToken,
-  checkPermissions(["VIEW_DIET_LOG"]),
-  getAllFoodLogsforUser
-);
-adminRouter.get(
-  "/get-diet-logs",
-  verifyToken,
-  checkPermissions(["VIEW_DIET_LOG"]),
-  getAllFoodLogs
-);
-
-adminRouter.delete(
-  "/delete-diet-log/:id",
-  verifyToken,
-  checkPermissions(["DELETE_DIET_LOG"]),
-  deleteFoodLog
 );
 
 //product controller

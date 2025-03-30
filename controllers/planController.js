@@ -1,16 +1,14 @@
 import prisma from "../db/prismaClient.js";
 
-import { z } from "zod";
+import { date, z } from "zod";
 
 const createWorkoutPlanSchema = z.object({
   user_id: z.number().min(1, "User ID is required"),
-  start_date: z.string().datetime(),
-  end_date: z.string().datetime(),
+  date: z.string().datetime(),
 });
 
 const updateWorkoutPlanSchema = z.object({
-  start_date: z.string().datetime().optional(),
-  end_date: z.string().datetime().optional(),
+  date: z.string().datetime().optional(),
 });
 
 export const createWorkoutPlan = async (req, res) => {
@@ -24,8 +22,7 @@ export const createWorkoutPlan = async (req, res) => {
     const workoutPlan = await prisma.workoutPlan.create({
       data: {
         user_id: parsedBody.user_id,
-        start_date: new Date(parsedBody.start_date),
-        end_date: new Date(parsedBody.end_date),
+        date: parsedBody.date,
         created_at: new Date(),
       },
     });
@@ -67,12 +64,7 @@ export const updateWorkoutPlan = async (req, res) => {
     const updatedWorkoutPlan = await prisma.workoutPlan.update({
       where: { id: parseInt(id) },
       data: {
-        start_date: parsedBody.start_date
-          ? new Date(parsedBody.start_date)
-          : workoutPlan.start_date,
-        end_date: parsedBody.end_date
-          ? new Date(parsedBody.end_date)
-          : workoutPlan.end_date,
+        date: parsedBody.date ? new Date(parsedBody.date) : workoutPlan.date,
       },
     });
 
@@ -179,8 +171,7 @@ export const getAllWorkoutPlans = async (req, res) => {
 
 const createDietPlanSchema = z.object({
   user_id: z.number().min(1, "User ID is required"),
-  start_date: z.string().datetime(),
-  end_date: z.string().datetime(),
+  date: z.string().datetime(),
 });
 
 export const createDietPlan = async (req, res) => {
@@ -194,8 +185,8 @@ export const createDietPlan = async (req, res) => {
     const dietPlan = await prisma.dietPlan.create({
       data: {
         user_id: parsedBody.user_id,
-        start_date: new Date(parsedBody.start_date),
-        end_date: new Date(parsedBody.end_date),
+        date: new Date(parsedBody.date),
+
         created_at: new Date(),
       },
     });
@@ -214,8 +205,7 @@ export const createDietPlan = async (req, res) => {
 };
 
 const updateDietPlanSchema = z.object({
-  start_date: z.string().datetime().optional(),
-  end_date: z.string().datetime().optional(),
+  date: z.string().datetime().optional(),
 });
 
 export const updateDietPlan = async (req, res) => {
@@ -242,12 +232,7 @@ export const updateDietPlan = async (req, res) => {
     const updatedDietPlan = await prisma.dietPlan.update({
       where: { id: parseInt(id) },
       data: {
-        start_date: parsedBody.start_date
-          ? new Date(parsedBody.start_date)
-          : dietPlan.start_date,
-        end_date: parsedBody.end_date
-          ? new Date(parsedBody.end_date)
-          : dietPlan.end_date,
+        date: parsedBody.date ? new Date(parsedBody.date) : dietPlan.date,
       },
     });
 
