@@ -2,6 +2,7 @@ import prisma from "../db/prismaClient.js";
 import { z } from "zod";
 import { updateDietPlan } from "./planController.js";
 import { startOfDay } from "date-fns";
+import { compareSync } from "bcryptjs";
 
 // export const getUserWorkoutPlanItems = async (req, res) => {
 //   const userId = req.userId; // Assume user ID is available from the authenticated request
@@ -104,18 +105,21 @@ export const getUserWorkoutPlanItems = async (req, res) => {
   const endOfDay = new Date(requestedDate.setHours(23, 59, 59, 999));
   console.log("Start of day:", startOfDay);
   console.log("End of day:", endOfDay);
-  // const workoutPlans = await prisma.workoutPlan.findMany({
-  //   where: {
-  //     user_id: userId,
-  //     date: {
-  //       gte: startOfDay,
-  //       lte: endOfDay,
-  //     },
-  //   },
-  // });
-  const workoutPlans = await prisma.$queryRaw`
- SELECT id, date FROM WorkoutPlan WHERE user_id = 8 AND date = '2025-03-27';;
-`;
+  const workoutPlans = await prisma.workoutPlan.findMany({
+    where: {
+      user_id: userId,
+      date: {
+        gte: startOfDay,
+        lte: endOfDay,
+      },
+    },
+    include: {
+      items: true,
+    },
+  });
+  //   const workoutPlans = await prisma.$queryRaw`
+  //  SELECT id, date FROM WorkoutPlan WHERE user_id = 8 AND date = '2025-03-27';;
+  // `;
 
   return res.status(200).json({ success: true, workoutPlans });
 };
@@ -127,6 +131,8 @@ export const updateUserWorkoutPlanItems = async (req, res) => {
   try {
     const { planItemId, status } = UpdateDietPlanSchema.parse(req.body);
     const userId = req.userId; // Assuming user ID is available in the request (JWT or session)
+    const today = new Date();
+    console.log("Current Date: from update func", today);
 
     // Get the workout plan item by planItemId to get activity and its duration
     const workoutPlanItem = await prisma.workoutPlanItem.findUnique({
@@ -135,12 +141,31 @@ export const updateUserWorkoutPlanItems = async (req, res) => {
         activity: true, // To get the activity data (calories_per_kg)
       },
     });
-
+    console.log("workoutPlanItem", workoutPlanItem);
+    const workoutPlanItemDate = new Date(workoutPlanItem.date);
+    workoutPlanItemDate.setUTCHours(0, 0, 0, 0); // Normalize to 00:00:00 UTC
+    console.log("workoutPlanItemDate", workoutPlanItemDate);
+    // Normalize the `today` date to remove the time part, assuming we want to compare using the local time zone
+    const today1 = new Date();
+    today.setHours(0, 0, 0, 0); // Set the local time to 00:00:00 (ignoring time)
+    console.log("today", today);
+    // Normalize `today` to UTC, so both are in the same time zone for comparison
+    const normalizedTodayUTC = new Date(today1.toISOString());
+    normalizedTodayUTC.setUTCHours(0, 0, 0, 0);
+    console.log("normalizedTodayUTC", normalizedTodayUTC);
+    // Compare the dates
+    if (workoutPlanItemDate.getTime() !== normalizedTodayUTC.getTime()) {
+      return res.status(404).json({
+        success: false,
+        message: "You can't change an old workout plan item",
+      });
+    }
     if (!workoutPlanItem) {
       return res
         .status(404)
         .json({ success: false, message: "Workout plan item not found" });
     }
+    //if date is not equal to today then return you cant change old workout plan item
 
     // Get the user's weight from the profile
     const userProfile = await prisma.userProfile.findUnique({
@@ -160,15 +185,12 @@ export const updateUserWorkoutPlanItems = async (req, res) => {
       userProfile.weight * caloriesPerMinute * workoutPlanItem.duration;
 
     // Check if there is an existing DailyProgress entry for the user and the current date
-    const today = new Date();
-    console.log("Current Date: from update func", today);
-    const currentDate = new Date(today.setHours(0, 0, 0, 0)); // Normalize to 00:00:00 to ignore time
 
     let dailyProgress = await prisma.dailyProgress.findUnique({
       where: {
         user_id_date: {
           user_id: userId,
-          date: currentDate, // Pass the Date object directly
+          date: today, // Pass the Date object directly
         },
       },
     });
@@ -178,7 +200,7 @@ export const updateUserWorkoutPlanItems = async (req, res) => {
       dailyProgress = await prisma.dailyProgress.create({
         data: {
           user_id: userId,
-          date: currentDate, // Pass the Date object directly
+          date: today, // Pass the Date object directly
           calories_burned: status === "COMPLETED" ? caloriesBurned : 0, // Initialize if completed
         },
       });
@@ -190,7 +212,7 @@ export const updateUserWorkoutPlanItems = async (req, res) => {
           where: {
             user_id_date: {
               user_id: userId,
-              date: currentDate, // Pass the Date object directly
+              date: today, // Pass the Date object directly
             },
           },
           data: {
@@ -203,7 +225,7 @@ export const updateUserWorkoutPlanItems = async (req, res) => {
           where: {
             user_id_date: {
               user_id: userId,
-              date: currentDate, // Pass the Date object directly
+              date: today, // Pass the Date object directly
             },
           },
           data: {
@@ -228,7 +250,7 @@ export const updateUserWorkoutPlanItems = async (req, res) => {
 
 export const deleteUserWorkoutPlanItem = async (req, res) => {
   const { planItemId } = req.params;
-  const userId = req.userId; // Assuming user ID is stored in the request (e.g., via JWT authentication)
+  const userId = req.userId; // Assuming user ID is available in the request (e.g., via JWT authentication)
 
   try {
     // Retrieve the workout plan item to check its status and other details
@@ -245,13 +267,26 @@ export const deleteUserWorkoutPlanItem = async (req, res) => {
         .status(404)
         .json({ success: false, message: "Workout plan item not found" });
     }
+    const today1 = new Date();
+    // Normalize workout plan item's date to 00:00:00 to compare with today's date
+    const workoutPlanItemDate = new Date(workoutPlanItem.date);
+    workoutPlanItemDate.setUTCHours(0, 0, 0, 0); // Normalize to 00:00:00 UTC
 
-    console.log("Workout Plan Item found:", workoutPlanItem);
+    // Normalize today's date to 00:00:00 to ignore the time part
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Normalize today's date to 00:00:00 (ignoring time)
+    const normalizedTodayUTC = new Date(today1.toISOString());
+    normalizedTodayUTC.setUTCHours(0, 0, 0, 0);
+    // Compare the dates to check if it's today's workout plan item
+    if (workoutPlanItemDate.getTime() !== normalizedTodayUTC.getTime()) {
+      return res.status(404).json({
+        success: false,
+        message: "You can't delete an old workout plan item",
+      });
+    }
 
     // Check if the workout item was marked as completed
     if (workoutPlanItem.status === "COMPLETED") {
-      console.log("The workout item was marked as COMPLETED.");
-
       // Get the user's profile (weight) to calculate calories burned
       const userProfile = await prisma.userProfile.findUnique({
         where: { user_id: userId },
@@ -263,32 +298,26 @@ export const deleteUserWorkoutPlanItem = async (req, res) => {
           .json({ success: false, message: "User profile not found" });
       }
 
-      console.log("User Profile found:", userProfile);
-
-      // Calculate calories burned
+      // Calculate calories burned based on the activity's calorie burn rate and user's weight
       const caloriesPerMinute = workoutPlanItem.activity.calories_per_kg / 60; // Calories burned per kg per minute
       const caloriesBurned =
         userProfile.weight * caloriesPerMinute * workoutPlanItem.duration; // Total calories burned
 
-      console.log("Calories burned:", caloriesBurned);
-
-      // Use today's date instead of the workout plan's start date
-      const todayDate = new Date(); // Get today's date
-      console.log("Using today's date:", todayDate);
+      // Use today's date for the daily progress
+      const todayDate = new Date();
+      todayDate.setHours(0, 0, 0, 0); // Normalize today's date
 
       // Find the daily progress entry for the user on today's date
       const dailyProgress = await prisma.dailyProgress.findUnique({
         where: {
           user_id_date: {
             user_id: userId,
-            date: todayDate, // Use today's date
+            date: todayDate, // Use today's date for comparison
           },
         },
       });
 
       if (dailyProgress) {
-        console.log("Found Daily Progress entry for today:", dailyProgress);
-
         // Subtract the calories burned by this activity from the daily progress
         await prisma.dailyProgress.update({
           where: {
@@ -301,121 +330,17 @@ export const deleteUserWorkoutPlanItem = async (req, res) => {
             calories_burned: dailyProgress.calories_burned - caloriesBurned,
           },
         });
-
-        console.log(
-          "Updated Daily Progress entry for today with calories burned."
-        );
-      } else {
-        console.log("No Daily Progress entry found for today.");
       }
-    } else {
-      console.log("The workout item was not marked as COMPLETED.");
     }
 
     // Now delete the workout plan item
     const deletedWorkoutPlan = await prisma.workoutPlanItem.delete({
       where: { id: parseInt(planItemId) },
     });
-
-    console.log("Deleted Workout Plan Item:", deletedWorkoutPlan);
 
     res.status(200).json({ success: true, deletedWorkoutPlan });
   } catch (error) {
     console.error("Error during deletion process:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
-  }
-};
-
-export const deleteUserWorkoutPlanItems = async (req, res) => {
-  const { planItemId } = req.params;
-  const userId = req.userId; // Assuming user ID is stored in the request (e.g., via JWT authentication)
-
-  try {
-    // Retrieve the workout plan item to check its status and other details
-    const workoutPlanItem = await prisma.workoutPlanItem.findUnique({
-      where: { id: parseInt(planItemId) },
-      include: {
-        activity: true, // Include activity to get calorie information
-        workout_plan: true, // Include workout plan to get the date
-      },
-    });
-
-    if (!workoutPlanItem) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Workout plan item not found" });
-    }
-
-    // Log workout plan item to debug
-    console.log("Workout Plan Item:", workoutPlanItem);
-
-    // Check if the workout item was marked as completed
-    if (workoutPlanItem.status === "COMPLETED") {
-      // Get the user's profile (weight) to calculate calories burned
-      const userProfile = await prisma.userProfile.findUnique({
-        where: { user_id: userId },
-      });
-
-      if (!userProfile) {
-        return res
-          .status(404)
-          .json({ success: false, message: "User profile not found" });
-      }
-
-      // Calculate calories burned
-      const caloriesPerMinute = workoutPlanItem.activity.calories_per_kg / 60; // Calories burned per kg per minute
-      const caloriesBurned =
-        userProfile.weight * caloriesPerMinute * workoutPlanItem.duration; // Total calories burned
-
-      // Get the current date of the workout plan (ensure date format is correct)
-      const workoutPlanDate = new Date(
-        workoutPlanItem.workout_plan.start_date
-      ).setHours(0, 0, 0, 0); // Normalize to midnight for exact date comparison
-      console.log("Workout Plan Date (Normalized):", workoutPlanDate);
-
-      // Find the daily progress entry for the user on the date of the workout plan item
-      const dailyProgress = await prisma.dailyProgress.findUnique({
-        where: {
-          user_id_date: {
-            user_id: userId,
-            date: workoutPlanDate, // Pass the Date object directly
-          },
-        },
-      });
-
-      // Log daily progress for debugging
-      console.log("Daily Progress:", dailyProgress);
-
-      if (dailyProgress) {
-        // Subtract the calories burned by this activity from the daily progress
-        const updatedCaloriesBurned =
-          dailyProgress.calories_burned - caloriesBurned;
-        console.log("Updated Calories Burned:", updatedCaloriesBurned);
-
-        await prisma.dailyProgress.update({
-          where: {
-            user_id_date: {
-              user_id: userId,
-              date: workoutPlanDate,
-            },
-          },
-          data: {
-            calories_burned: updatedCaloriesBurned,
-          },
-        });
-      } else {
-        console.log("No daily progress entry found for this date");
-      }
-    }
-
-    // Now delete the workout plan item
-    const deletedWorkoutPlan = await prisma.workoutPlanItem.delete({
-      where: { id: parseInt(planItemId) },
-    });
-
-    res.status(200).json({ success: true, deletedWorkoutPlan });
-  } catch (error) {
-    console.error(error);
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };

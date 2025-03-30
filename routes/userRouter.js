@@ -17,13 +17,13 @@ userRouter.get(
 userRouter.put(
   "/update-workout-plan",
   verifyToken,
-  checkPermissions(["MODIFY_DIET_PLAN"]),
+  checkPermissions(["VIEW_DIET_PLAN"]),
   updateUserWorkoutPlanItems
 );
 userRouter.delete(
   "/delete-workout-plan/:planItemId",
   verifyToken,
-  checkPermissions(["DELETE_DIET_PLAN"]),
+  checkPermissions(["VIEW_DIET_PLAN"]),
   deleteUserWorkoutPlanItem
 );
 export default userRouter;
