@@ -1,5 +1,6 @@
 import prisma from "../db/prismaClient.js";
 import { z } from "zod";
+import OpenAI from "openai";
 
 export const createFoodCatalogueSchema = z.object({
   name: z.string().min(1, "Food name is required"),
@@ -389,6 +390,129 @@ export const getAllDietPlanItems = async (req, res) => {
     return res.status(200).json({
       success: true,
       dietPlanItems,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const fetchSuggestedDietPlan = async (req, res) => {
+  try {
+    // const suggestedDietPlan = await prisma.dietPlan.findMany({
+    //   where: {
+    //     user_id: req.userId,
+    //   },
+    //   include: {
+    //     items: true,
+    //   },
+    // });
+
+    const food_items = await prisma.foodCatalogue.findMany();
+
+    const client = new OpenAI({
+      apiKey: process.env["OPENAI_API_KEY"],
+    });
+
+    const response = await client.responses.create({
+      model: "gpt-4o",
+      instructions:
+        `You are a Professional Diet Planner.\
+        Your task is to suggest a diet plan based on the user's preferences and goals.\
+        You should provide a detailed breakdown of the meals, including the food items, quantity, and calories.\
+        You should also include any necessary modifications or substitutions to ensure the user's dietary needs are met.\
+        The plan should be presented in a clear and concise manner, with a focus on the user's goals and preferences.\
+        Please ensure that the plan is realistic and achievable, and that it aligns with the user's values and priorities.\
+        User Preferences:\
+        - User is looking to lose weight and maintain a healthy weight.\
+        - User prefers whole foods, fruits, and vegetables.\
+        - User enjoys moderate to high protein intake.\
+        - User is looking for a balanced and nutritious diet.\
+        Food Items Catalogue:\
+        - ${food_items}\
+        Output Format (JSON):\
+        {
+          diet_plan: {
+            "breakfast": [
+              {
+                "food": "apple",
+                "quantity": 1,
+                "calories": 100
+              },
+              {
+                "food": "banana",
+                "quantity": 1,
+                "calories": 100
+              }
+            ],
+            "lunch": [
+              {
+                "food": "chicken",
+                "quantity": 1,
+                "calories": 100
+              },
+              {
+                "food": "avocado",
+                "quantity": 1,
+                "calories": 100
+              }
+            ],
+            "dinner": [
+              {
+                "food": "salmon",
+                "quantity": 1,
+                "calories": 100
+              },
+              {
+                "food": "sweet potato",
+                "quantity": 1,
+                "calories": 100
+              }
+            ],
+            "snacks": [
+              {
+                "food": "carrot",
+                "quantity": 1,
+                "calories": 100
+              },
+              {
+                "food": "almond",
+                "quantity": 1,
+                "calories": 100
+              }
+            ]
+          },
+          food_log: {
+            "breakfast": [
+              {
+                "food": "apple",
+                "quantity": 1,
+                "calories": 100
+              },
+              {
+                "food": "banana",
+                "quantity": 1,
+                "calories": 100
+              }
+            ],
+          }
+        }\
+        Instructions:\
+        1. Strictly follow the provided instructions and format.\
+        2. Do not include any additional text or explanations.\
+        3. Ensure that the output is a valid JSON object.\
+        4. Do not include any additional fields or properties.\
+        5. Do not include any additional food items or variations.\
+        6. Do not include any food items that are not in the catalogue.\
+        `, 
+      input: "Are semicolons optional in JavaScript?",
+    });
+
+    return res.status(200).json({
+      success: true,
+      suggestedDietPlan: response,
     });
   } catch (error) {
     return res.status(400).json({

@@ -25,6 +25,7 @@
     "jsonwebtoken": "^9.0.2",
     "mailtrap": "^4.0.0",
     "nodemailer": "^6.10.0",
+    "openai": "^4.90.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {
