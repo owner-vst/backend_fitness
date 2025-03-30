@@ -359,20 +359,17 @@ async function main() {
     data: [
       {
         user_id: 1, // Example user ID
-        start_date: new Date("2025-03-01"),
-        end_date: new Date("2025-03-31"),
+        date: new Date("2025-03-01"),
         created_at: new Date(),
       },
       {
         user_id: 2, // Example user ID
-        start_date: new Date("2025-04-01"),
-        end_date: new Date("2025-04-30"),
+        date: new Date("2025-04-01"),
         created_at: new Date(),
       },
       {
         user_id: 7, // Example user ID
-        start_date: new Date("2025-05-01"),
-        end_date: new Date("2025-05-31"),
+        date: new Date("2025-05-01"),
         created_at: new Date(),
       },
     ],
@@ -385,97 +382,96 @@ async function main() {
         workout_plan_id: 1, // Example workout plan ID
         activity_id: 1, // Example activity ID (Running)
         duration: 60, //in min
+        user_id: 1,
+        plan_type: "USER",
+        date: new Date(),
+        created_by_id: 1,
+        status: "PENDING",
       },
       {
         workout_plan_id: 1, // Example workout plan ID
         activity_id: 2, // Example activity ID (Swimming)
         duration: 30, //in min
+        user_id: 1,
+        plan_type: "AI",
+        date: new Date(),
+        created_by_id: 1,
+        status: "PENDING",
       },
       {
         workout_plan_id: 1, // Example workout plan ID
         activity_id: 3, // Example activity ID (Cycling)
         duration: 30, //in min
+        user_id: 1,
+        plan_type: "USER",
+        date: new Date(),
+        created_by_id: 1,
+        status: "PENDING",
       },
       {
         workout_plan_id: 2, // Example workout plan ID
         activity_id: 4, // Example activity ID (Yoga)
         duration: 15, //in min
+        user_id: 1,
+        plan_type: "USER",
+        date: new Date(),
+        created_by_id: 1,
+        status: "PENDING",
       },
       {
         workout_plan_id: 2, // Example workout plan ID
         activity_id: 5, // Example activity ID (Weightlifting)
         duration: 20, //in min
+        user_id: 1,
+        plan_type: "USER",
+        date: new Date(),
+        created_by_id: 1,
+        status: "PENDING",
       },
       {
         workout_plan_id: 2, // Example workout plan ID
         activity_id: 1, // Example activity ID (Running)
         duration: 10, //in min
+        user_id: 1,
+        plan_type: "USER",
+        date: new Date(),
+        created_by_id: 1,
+        status: "PENDING",
       },
       {
         workout_plan_id: 3, // Example workout plan ID
         activity_id: 2, // Example activity ID (Swimming)
         duration: 30, //in min
+        user_id: 1,
+        plan_type: "USER",
+        date: new Date(),
+        created_by_id: 1,
+        status: "PENDING",
       },
       {
         workout_plan_id: 3, // Example workout plan ID
         activity_id: 3, // Example activity ID (Cycling)
         duration: 30, //in min
+        user_id: 1,
+        plan_type: "USER",
+        date: new Date(),
+        created_by_id: 1,
+        status: "PENDING",
       },
       {
         workout_plan_id: 3, // Example workout plan ID
         activity_id: 4, // Example activity ID (Yoga)
         duration: 15, //in min
+        user_id: 1,
+        plan_type: "USER",
+        date: new Date(),
+        created_by_id: 1,
+        status: "PENDING",
       },
     ],
   });
 
   // Seed WorkoutLogs
-  const workoutLogs = await prisma.workoutLog.createMany({
-    data: [
-      {
-        user_id: 1, // Example user ID
-        date: new Date("2025-03-01"),
-        activity_id: 1, // Example activity ID (Running)
-        duration: 60, // 1 hour
-        status: "COMPLETED",
-      },
-      {
-        user_id: 2, // Example user ID
-        date: new Date("2025-03-01"),
-        activity_id: 2, // Example activity ID (Swimming)
-        duration: 60, // 1 hour
-        status: "COMPLETED",
-      },
-      {
-        user_id: 1, // Example user ID
-        date: new Date("2025-03-02"),
-        activity_id: 3, // Example activity ID (Cycling)
-        duration: 60, // 1 hour
-        status: "COMPLETED",
-      },
-      {
-        user_id: 2, // Example user ID
-        date: new Date("2025-03-02"),
-        activity_id: 1, // Example activity ID (Running)
-        duration: 60, // 1 hour
-        status: "COMPLETED",
-      },
-      {
-        user_id: 3, // Example user ID
-        date: new Date("2025-03-03"),
-        activity_id: 4, // Example activity ID (Yoga)
-        duration: 60, // 1 hour
-        status: "COMPLETED",
-      },
-      {
-        user_id: 4, // Example user ID
-        date: new Date("2025-03-03"),
-        activity_id: 5, // Example activity ID (Weightlifting)
-        duration: 60, // 1 hour
-        status: "COMPLETED",
-      },
-    ],
-  });
 
   // Seed FoodCatalogue
   const foodCatalogue = await prisma.foodCatalogue.createMany({
@@ -584,28 +580,23 @@ async function main() {
     data: [
       {
         user_id: 1,
-        start_date: new Date("2023-01-01"),
-        end_date: new Date("2023-01-31"),
+        date: new Date("2023-01-01"),
       },
       {
         user_id: 2,
-        start_date: new Date("2023-02-01"),
-        end_date: new Date("2023-02-28"),
+        date: new Date("2023-02-01"),
       },
       {
         user_id: 3,
-        start_date: new Date("2023-03-01"),
-        end_date: new Date("2023-03-31"),
+        date: new Date("2023-03-01"),
       },
       {
         user_id: 4,
-        start_date: new Date("2023-04-01"),
-        end_date: new Date("2023-04-30"),
+        date: new Date("2023-04-01"),
       },
       {
         user_id: 7,
-        start_date: new Date("2023-05-01"),
-        end_date: new Date("2023-05-31"),
+        date: new Date("2023-05-01"),
       },
     ],
   });
@@ -613,71 +604,181 @@ async function main() {
   // Seed DietPlanItems
   const dietPlanItems = await prisma.dietPlanItem.createMany({
     data: [
-      { diet_plan_id: 1, meal_type: "BREAKFAST", food_id: 1, quantity: 1 },
-      { diet_plan_id: 1, meal_type: "LUNCH", food_id: 2, quantity: 1 },
-      { diet_plan_id: 1, meal_type: "DINNER", food_id: 3, quantity: 200 },
-      { diet_plan_id: 1, meal_type: "SNACK", food_id: 4, quantity: 150 },
-      { diet_plan_id: 2, meal_type: "BREAKFAST", food_id: 5, quantity: 100 },
-      { diet_plan_id: 2, meal_type: "LUNCH", food_id: 6, quantity: 1 },
-      { diet_plan_id: 2, meal_type: "DINNER", food_id: 7, quantity: 10 },
-      { diet_plan_id: 2, meal_type: "SNACK", food_id: 8, quantity: 50 },
-      { diet_plan_id: 3, meal_type: "BREAKFAST", food_id: 9, quantity: 200 },
-      { diet_plan_id: 3, meal_type: "LUNCH", food_id: 10, quantity: 150 },
-      { diet_plan_id: 3, meal_type: "DINNER", food_id: 11, quantity: 100 },
-      { diet_plan_id: 3, meal_type: "SNACK", food_id: 12, quantity: 50 },
-      { diet_plan_id: 4, meal_type: "BREAKFAST", food_id: 1, quantity: 1 },
-      { diet_plan_id: 4, meal_type: "LUNCH", food_id: 2, quantity: 1 },
-      { diet_plan_id: 4, meal_type: "DINNER", food_id: 3, quantity: 200 },
-      { diet_plan_id: 4, meal_type: "SNACK", food_id: 4, quantity: 150 },
-      { diet_plan_id: 5, meal_type: "BREAKFAST", food_id: 5, quantity: 100 },
-      { diet_plan_id: 5, meal_type: "LUNCH", food_id: 6, quantity: 1 },
-      { diet_plan_id: 5, meal_type: "DINNER", food_id: 7, quantity: 10 },
-      { diet_plan_id: 5, meal_type: "SNACK", food_id: 8, quantity: 50 },
-    ],
-  });
-
-  // Seed FoodLogs
-  const foodLogs = await prisma.foodLog.createMany({
-    data: [
       {
-        user_id: 1,
-        date: new Date("2023-01-01"),
-        food_id: 1,
-        quantity: 100,
-        status: "COMPLETED",
+        diet_plan_id: 1,
         meal_type: "BREAKFAST",
+        food_id: 1,
+        quantity: 1,
+        user_id: 1,
+        plan_type: "USER",
+        date: new Date(),
+        created_by_id: 1,
+        status: "PENDING",
       },
       {
-        user_id: 2,
-        date: new Date("2023-02-01"),
-        food_id: 2,
-        quantity: 100,
-        status: "COMPLETED",
+        diet_plan_id: 1,
         meal_type: "LUNCH",
+        food_id: 2,
+        quantity: 1,
+        user_id: 1,
+        plan_type: "USER",
+        date: new Date(),
+        created_by_id: 1,
+        status: "PENDING",
       },
       {
-        user_id: 3,
-        date: new Date("2023-03-01"),
+        diet_plan_id: 1,
+        meal_type: "DINNER",
         food_id: 3,
         quantity: 200,
-        status: "COMPLETED",
-        meal_type: "DINNER",
+        user_id: 1,
+        plan_type: "USER",
+        date: new Date(),
+        created_by_id: 1,
+        status: "PENDING",
       },
       {
-        user_id: 4,
-        date: new Date("2023-04-01"),
+        diet_plan_id: 1,
+        meal_type: "SNACK",
         food_id: 4,
         quantity: 150,
-        status: "COMPLETED",
-        meal_type: "SNACK",
+        user_id: 1,
+        plan_type: "USER",
+        date: new Date(),
+        created_by_id: 1,
+        status: "PENDING",
       },
       {
-        user_id: 5,
-        date: new Date("2023-05-01"),
+        diet_plan_id: 2,
+        meal_type: "BREAKFAST",
         food_id: 5,
         quantity: 100,
-        status: "COMPLETED",
+        user_id: 1,
+        plan_type: "USER",
+        date: new Date(),
+        created_by_id: 1,
+        status: "PENDING",
+      },
+      {
+        diet_plan_id: 2,
+        meal_type: "LUNCH",
+        food_id: 6,
+        quantity: 1,
+        user_id: 1,
+        plan_type: "USER",
+        date: new Date(),
+        created_by_id: 1,
+        status: "PENDING",
+      },
+      {
+        diet_plan_id: 2,
+        meal_type: "DINNER",
+        food_id: 7,
+        quantity: 10,
+        user_id: 1,
+        plan_type: "USER",
+        date: new Date(),
+        created_by_id: 1,
+        status: "PENDING",
+      },
+      {
+        diet_plan_id: 2,
+        meal_type: "SNACK",
+        food_id: 8,
+        quantity: 50,
+        user_id: 1,
+        plan_type: "USER",
+        date: new Date(),
+        created_by_id: 1,
+        status: "PENDING",
+      },
+      {
+        diet_plan_id: 3,
         meal_type: "BREAKFAST",
+        food_id: 9,
+        quantity: 200,
+        user_id: 1,
+        plan_type: "USER",
+        date: new Date(),
+        created_by_id: 1,
+        status: "PENDING",
+      },
+      {
+        diet_plan_id: 3,
+        meal_type: "LUNCH",
+        food_id: 10,
+        quantity: 150,
+        user_id: 1,
+        plan_type: "USER",
+        date: new Date(),
+        created_by_id: 1,
+        status: "PENDING",
+      },
+      {
+        diet_plan_id: 3,
+        meal_type: "DINNER",
+        food_id: 11,
+        quantity: 100,
+        user_id: 1,
+        plan_type: "USER",
+        date: new Date(),
+        created_by_id: 1,
+        status: "PENDING",
+      },
+      {
+        diet_plan_id: 3,
+        meal_type: "SNACK",
+        food_id: 12,
+        quantity: 50,
+        user_id: 1,
+        plan_type: "USER",
+        date: new Date(),
+        created_by_id: 1,
+        status: "PENDING",
+      },
+      {
+        diet_plan_id: 4,
+        meal_type: "BREAKFAST",
+        food_id: 1,
+        quantity: 1,
+        user_id: 1,
+        plan_type: "USER",
+        date: new Date(),
+        created_by_id: 1,
+        status: "PENDING",
+      },
+      {
+        diet_plan_id: 4,
+        meal_type: "LUNCH",
+        food_id: 2,
+        quantity: 1,
+        user_id: 1,
+        plan_type: "USER",
+        date: new Date(),
+        created_by_id: 1,
+        status: "PENDING",
+      },
+      {
+        diet_plan_id: 4,
+        meal_type: "DINNER",
+        food_id: 3,
+        quantity: 200,
+        user_id: 1,
+        plan_type: "USER",
+        date: new Date(),
+        created_by_id: 1,
+        status: "PENDING",
+      },
+      {
+        diet_plan_id: 4,
+        meal_type: "SNACK",
+        food_id: 4,
+        quantity: 150,
+        user_id: 1,
+        plan_type: "USER",
+        date: new Date(),
+        created_by_id: 1,
+        status: "PENDING",
       },
     ],
   });

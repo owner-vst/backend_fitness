@@ -33,10 +33,10 @@ model User {
  // user_profile       UserProfile?        @relation(fields: [id], references: [user_id])
   activities         Activity[]
   workout_plans      WorkoutPlan[]
-  workout_logs       WorkoutLog[]
+ 
   food_catalogue     FoodCatalogue[]
   diet_plans         DietPlan[]
-  food_logs          FoodLog[]
+ 
   ai_recommendations AiRecommendation[]
   daily_progress     DailyProgress[]
   sent_messages      Message[]           @relation("Sender")
@@ -50,6 +50,12 @@ model User {
   UserProfile UserProfile[]
 
   Product Product[]
+  workoutPlanItemsCreated  WorkoutPlanItem[] @relation("CreatedWorkoutPlanItems")
+  WorkoutPlanItem WorkoutPlanItem[] @relation("WorkoutPlanItems")
+
+  DietPlanItem DietPlanItem[] @relation("DietPlanItems")
+
+  dietPlanItemsCreated DietPlanItem[] @relation("CreatedDietPlanItems")
 }
 
 model Role {
@@ -94,14 +100,12 @@ model Activity {
 
   WorkoutPlanItem WorkoutPlanItem[]
 
-  WorkoutLog WorkoutLog[]
 }
 
 model WorkoutPlan {
   id        Int       @id @default(autoincrement())
   user_id   Int
-  start_date DateTime
-  end_date   DateTime
+ date DateTime 
   created_at DateTime @default(now())
   user      User      @relation(fields: [user_id], references: [id])
   items     WorkoutPlanItem[]
@@ -113,21 +117,17 @@ model WorkoutPlanItem {
   activity_id     Int
   duration        Int
   status          WorkoutStatus @default(PENDING)
+  user_id Int
+  plan_type PlanType
+  date DateTime
+  created_by_id Int
+   created_by User @relation("CreatedWorkoutPlanItems",fields: [created_by_id], references: [id]) 
+  user      User      @relation("WorkoutPlanItems",fields: [user_id], references: [id])
   workout_plan    WorkoutPlan   @relation(fields: [workout_plan_id], references: [id])
   activity        Activity      @relation(fields: [activity_id], references: [id])
 }
 
-model WorkoutLog {
-  id            Int       @id @default(autoincrement())
-  user_id       Int
-  date          DateTime
-  activity_id   Int
-  duration      Int
-  status       WorkoutStatus @default(PENDING)
-  
-  user          User      @relation(fields: [user_id], references: [id])
-  activity      Activity  @relation(fields: [activity_id], references: [id])
-}
+
 
 model FoodCatalogue {
   id          Int       @id @default(autoincrement())
@@ -142,14 +142,13 @@ model FoodCatalogue {
 
   DietPlanItem DietPlanItem[]
 
-  FoodLog FoodLog[]
+ 
 }
 
 model DietPlan {
   id        Int       @id @default(autoincrement())
   user_id   Int
-  start_date DateTime
-  end_date   DateTime
+  date DateTime
   created_at DateTime @default(now())
   user      User      @relation(fields: [user_id], references: [id])
   items     DietPlanItem[]
@@ -163,22 +162,18 @@ model DietPlanItem {
   meal_type   MealType
   food_id     Int
   quantity    Float
+  user_id Int
+  plan_type PlanType
+  date DateTime
+   created_by_id Int
+    created_by User @relation("CreatedDietPlanItems",fields: [created_by_id], references: [id])
+    user      User      @relation("DietPlanItems",fields: [user_id], references: [id])
   status      DietStatus @default(PENDING)
   diet_plan   DietPlan   @relation(fields: [diet_plan_id], references: [id])
   food        FoodCatalogue @relation(fields: [food_id], references: [id])
 }
 
-model FoodLog {
-  id        Int       @id @default(autoincrement())
-  user_id   Int
-  date      DateTime
-  food_id   Int
-  quantity  Float
-  meal_type MealType
-  status    DietStatus @default(PENDING)
-  user      User      @relation(fields: [user_id], references: [id])
-  food      FoodCatalogue @relation(fields: [food_id], references: [id])
-}
+
 
 model AiRecommendation {
   id        Int       @id @default(autoincrement())
@@ -344,7 +339,10 @@ enum ActivityUnit {
   REPS
   SETS
 }
-
+enum PlanType{
+  AI
+  USER
+}
 enum WorkoutStatus {
   PENDING
   COMPLETED
