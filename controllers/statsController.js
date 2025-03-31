@@ -182,12 +182,12 @@ export const getDailyStats = async (req, res) => {
         caloriesPerMinute *
         item.duration
       ).toFixed(0); // Round to nearest integer
-      console.log(
-        caloriesBurned,
-        userProfile.weight,
-        caloriesPerMinute,
-        item.duration
-      );
+      //   console.log(
+      //     caloriesBurned,
+      //     userProfile.weight,
+      //     caloriesPerMinute,
+      //     item.duration
+      //   );
 
       // Get the day of the week (e.g., "Monday", "Tuesday")
       const date = new Date(item.date);
@@ -217,7 +217,7 @@ export const getDailyStats = async (req, res) => {
       const dayIndex = daysOfWeek.indexOf(dayOfWeek);
 
       // Add the calories burned to the respective day of the week
-      console.log(activityName, daysOfWeek[dayIndex], caloriesBurned);
+      //   console.log(activityName, daysOfWeek[dayIndex], caloriesBurned);
       acc[activityName].caloriesPerDay[dayIndex] += parseInt(caloriesBurned);
 
       return acc;
