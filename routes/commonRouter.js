@@ -12,7 +12,7 @@ import {
   updateUserProfile,
 } from "../controllers/profileController.js";
 import { fetchSuggestedDietPlan } from "../controllers/dietController.js";
-import { getStats } from "../controllers/statsController.js";
+import { getDailyStats, getStats } from "../controllers/statsController.js";
 
 const commonRouter = express.Router();
 commonRouter.get("/me", verifyToken, Me);
@@ -26,5 +26,6 @@ commonRouter.get("/get-profile", verifyToken, getUserProfile);
 
 commonRouter.get("/suggest-diet-plan", verifyToken, fetchSuggestedDietPlan);
 commonRouter.get("/personal-stats", verifyToken, getStats);
+commonRouter.get("/workout-stats", verifyToken, getDailyStats);
 
 export default commonRouter;

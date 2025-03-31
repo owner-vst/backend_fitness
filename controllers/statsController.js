@@ -90,3 +90,146 @@ export const getStats = async (req, res) => {
       .json({ error: "An error occurred while fetching activities." });
   }
 };
+
+function getStartOfWeek() {
+  const now = new Date();
+  const dayOfWeek = now.getUTCDay();
+  const diff = now.getUTCDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Get Monday's date
+  const startOfWeek = new Date(now.setUTCDate(diff));
+  startOfWeek.setUTCHours(0, 0, 0, 0); // Set time to midnight
+  return startOfWeek;
+}
+
+// Helper function to get the end of the current week (Sunday)
+function getEndOfWeek() {
+  const startOfWeek = getStartOfWeek();
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setUTCDate(startOfWeek.getUTCDate() + 6); // Sunday is 6 days after Monday
+  endOfWeek.setUTCHours(23, 59, 59, 999); // Set time to 23:59:59
+  return endOfWeek;
+}
+// Helper function to get the start of the previous week (Monday of last week) in UTC
+function getStartOfLastWeek() {
+  const now = new Date();
+  const dayOfWeek = now.getUTCDay(); // Get the day of the week in UTC
+  const diff = now.getUTCDate() - dayOfWeek - 7 + (dayOfWeek === 0 ? -6 : 1); // Get last week's Monday
+  const startOfLastWeek = new Date(now.setUTCDate(diff));
+  startOfLastWeek.setUTCHours(0, 0, 0, 0); // Set time to midnight in UTC
+  return startOfLastWeek;
+}
+
+// Helper function to get the end of the previous week (Sunday of last week) in UTC
+function getEndOfLastWeek() {
+  const startOfLastWeek = getStartOfLastWeek();
+  const endOfLastWeek = new Date(startOfLastWeek);
+  endOfLastWeek.setUTCDate(startOfLastWeek.getUTCDate() + 6); // Sunday is 6 days after Monday
+  endOfLastWeek.setUTCHours(23, 59, 59, 999); // Set time to 23:59:59 in UTC
+  return endOfLastWeek;
+}
+
+export const getDailyStats = async (req, res) => {
+  const user_id = req.userId; // Get user_id from query parameter
+
+  if (!user_id) {
+    return res.status(400).json({ error: "User ID is required" });
+  }
+
+  try {
+    const userProfile = await prisma.userProfile.findUnique({
+      where: { user_id: parseInt(user_id) }, // Ensure we get the correct user profile
+    });
+
+    if (!userProfile) {
+      return res.status(404).json({ error: "User profile not found" });
+    }
+
+    // Get the start and end of the current week
+    // const startOfWeek = getStartOfWeek();
+    // const endOfWeek = getEndOfWeek();
+    const startOfLastWeek = getStartOfWeek();
+    const endOfLastWeek = getEndOfWeek();
+    // Fetch workout plan items for the user in the current week
+    const workoutPlanItems = await prisma.workoutPlanItem.findMany({
+      where: {
+        user_id: parseInt(user_id),
+        status: "COMPLETED",
+        date: {
+          gte: startOfLastWeek, // Greater than or equal to start of week
+          lte: endOfLastWeek, // Less than or equal to end of week
+        },
+      },
+      include: {
+        activity: true, // Include activity data to access its calories_per_kg
+      },
+    });
+
+    // Prepare the result object
+    const activitiesSummary = workoutPlanItems.reduce((acc, item) => {
+      const activityName = item.activity.name;
+
+      // Calculate calories burned per minute from calories per hour
+      const caloriesPerMinute = item.activity.calories_per_kg / 60;
+
+      // Calculate calories burned using user's weight and session duration in minutes
+      const caloriesBurned = (
+        userProfile.weight *
+        caloriesPerMinute *
+        item.duration
+      ).toFixed(0); // Round to nearest integer
+      console.log(
+        caloriesBurned,
+        userProfile.weight,
+        caloriesPerMinute,
+        item.duration
+      );
+
+      // Get the day of the week (e.g., "Monday", "Tuesday")
+      const date = new Date(item.date);
+      const dayOfWeek = date.toLocaleString("en-US", {
+        weekday: "long",
+        timeZone: "UTC",
+      });
+
+      // Initialize the activity array if it doesn't exist
+      if (!acc[activityName]) {
+        acc[activityName] = {
+          name: activityName,
+          caloriesPerDay: new Array(7).fill(0), // Array for 7 days of the week
+        };
+      }
+
+      // Map days of the week to index (0: Monday, 1: Tuesday, ..., 6: Sunday)
+      const daysOfWeek = [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday",
+      ];
+      const dayIndex = daysOfWeek.indexOf(dayOfWeek);
+
+      // Add the calories burned to the respective day of the week
+      console.log(activityName, daysOfWeek[dayIndex], caloriesBurned);
+      acc[activityName].caloriesPerDay[dayIndex] += parseInt(caloriesBurned);
+
+      return acc;
+    }, {});
+
+    // Format the response to include only activity name and calories burned for each day
+    const formattedSummary = Object.values(activitiesSummary).map(
+      (activity) => ({
+        [activity.name]: activity.caloriesPerDay,
+      })
+    );
+
+    // Return the result
+    res.status(200).json(formattedSummary);
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json({ error: "An error occurred while fetching activities." });
+  }
+};
