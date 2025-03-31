@@ -91,29 +91,35 @@ export const getStats = async (req, res) => {
   }
 };
 
+// Helper function to get the start of the current week (Monday) in UTC
 function getStartOfWeek() {
   const now = new Date();
   const dayOfWeek = now.getUTCDay();
   const diff = now.getUTCDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Get Monday's date
-  const startOfWeek = new Date(now.setUTCDate(diff));
+  const startOfWeek = new Date(now); // Create a new Date object to avoid mutating `now`
+  startOfWeek.setUTCDate(diff);
   startOfWeek.setUTCHours(0, 0, 0, 0); // Set time to midnight
   return startOfWeek;
 }
 
-// Helper function to get the end of the current week (Sunday)
+// Helper function to get the end of the current week (Sunday) in UTC
 function getEndOfWeek() {
   const startOfWeek = getStartOfWeek();
-  const endOfWeek = new Date(startOfWeek);
+  const endOfWeek = new Date(startOfWeek); // Create a new Date object to avoid mutating `startOfWeek`
   endOfWeek.setUTCDate(startOfWeek.getUTCDate() + 6); // Sunday is 6 days after Monday
   endOfWeek.setUTCHours(23, 59, 59, 999); // Set time to 23:59:59
   return endOfWeek;
 }
-// Helper function to get the start of the previous week (Monday of last week) in UTC
+
+// Helper function to get the start of the last week (Monday of last week) in UTC
 function getStartOfLastWeek() {
   const now = new Date();
   const dayOfWeek = now.getUTCDay(); // Get the day of the week in UTC
   const diff = now.getUTCDate() - dayOfWeek - 7 + (dayOfWeek === 0 ? -6 : 1); // Get last week's Monday
-  const startOfLastWeek = new Date(now.setUTCDate(diff));
+
+  // Create a new Date object to avoid modifying the original `now` object
+  const startOfLastWeek = new Date(now); // Copy `now` to a new object
+  startOfLastWeek.setUTCDate(diff);
   startOfLastWeek.setUTCHours(0, 0, 0, 0); // Set time to midnight in UTC
   return startOfLastWeek;
 }
@@ -121,7 +127,7 @@ function getStartOfLastWeek() {
 // Helper function to get the end of the previous week (Sunday of last week) in UTC
 function getEndOfLastWeek() {
   const startOfLastWeek = getStartOfLastWeek();
-  const endOfLastWeek = new Date(startOfLastWeek);
+  const endOfLastWeek = new Date(startOfLastWeek); // Create a new Date object based on start of last week
   endOfLastWeek.setUTCDate(startOfLastWeek.getUTCDate() + 6); // Sunday is 6 days after Monday
   endOfLastWeek.setUTCHours(23, 59, 59, 999); // Set time to 23:59:59 in UTC
   return endOfLastWeek;
@@ -144,18 +150,18 @@ export const getDailyStats = async (req, res) => {
     }
 
     // Get the start and end of the current week
-    // const startOfWeek = getStartOfWeek();
-    // const endOfWeek = getEndOfWeek();
-    const startOfLastWeek = getStartOfWeek();
-    const endOfLastWeek = getEndOfWeek();
+    const startOfWeek = getStartOfWeek();
+    const endOfWeek = getEndOfWeek();
+    // const startOfLastWeek = getStartOfLastWeek();
+    // const endOfLastWeek = getEndOfLastWeek();
     // Fetch workout plan items for the user in the current week
     const workoutPlanItems = await prisma.workoutPlanItem.findMany({
       where: {
         user_id: parseInt(user_id),
         status: "COMPLETED",
         date: {
-          gte: startOfLastWeek, // Greater than or equal to start of week
-          lte: endOfLastWeek, // Less than or equal to end of week
+          gte: startOfWeek, // Greater than or equal to start of week
+          lte: endOfWeek, // Less than or equal to end of week
         },
       },
       include: {
