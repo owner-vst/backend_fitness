@@ -11,7 +11,12 @@ import {
   getUserProfile,
   updateUserProfile,
 } from "../controllers/profileController.js";
-import { fetchSuggestedDietPlan } from "../controllers/dietController.js";
+import {
+  calculateCalories,
+  fetchSuggestedDietPlan,
+  getOrCreateDietPlan,
+  getOrCreateWorkoutPlan,
+} from "../controllers/dietController.js";
 import { getDailyStats, getStats } from "../controllers/statsController.js";
 
 const commonRouter = express.Router();
@@ -27,5 +32,19 @@ commonRouter.get("/get-profile", verifyToken, getUserProfile);
 commonRouter.get("/suggest-diet-plan", verifyToken, fetchSuggestedDietPlan);
 commonRouter.get("/personal-stats", verifyToken, getStats);
 commonRouter.get("/workout-stats", verifyToken, getDailyStats);
-
+commonRouter.get("/workout=plan-id", verifyToken, async (req, res) => {
+  const planId = await getOrCreateWorkoutPlan(req.userId);
+  console.log(planId);
+  res.send(planId);
+});
+commonRouter.get("/diet-plan-id", verifyToken, async (req, res) => {
+  const planId = await getOrCreateDietPlan(req.userId);
+  console.log(planId);
+  res.send(planId);
+});
+commonRouter.get("/calories", verifyToken, async (req, res) => {
+  const calories = await calculateCalories(req.userId);
+  console.log(calories);
+  res.send(calories);
+});
 export default commonRouter;

@@ -47,7 +47,7 @@ model User {
   wishlist           Wishlist[]
   api_keys           ApiKey[]
 
-  UserProfile UserProfile[]
+  UserProfile UserProfile?
 
   Product Product[]
   workoutPlanItemsCreated  WorkoutPlanItem[] @relation("CreatedWorkoutPlanItems")
