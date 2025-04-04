@@ -13,6 +13,7 @@ import {
 } from "../controllers/profileController.js";
 import {
   calculateCalories,
+  createMultipleDietPlanItems,
   fetchSuggestedDietPlan,
   getOrCreateDietPlan,
   getOrCreateWorkoutPlan,
@@ -32,7 +33,7 @@ commonRouter.get("/get-profile", verifyToken, getUserProfile);
 commonRouter.get("/suggest-diet-plan", verifyToken, fetchSuggestedDietPlan);
 commonRouter.get("/personal-stats", verifyToken, getStats);
 commonRouter.get("/workout-stats", verifyToken, getDailyStats);
-commonRouter.get("/workout=plan-id", verifyToken, async (req, res) => {
+commonRouter.get("/workout-plan-id", verifyToken, async (req, res) => {
   const planId = await getOrCreateWorkoutPlan(req.userId);
   console.log(planId);
   res.send(planId);
@@ -47,4 +48,9 @@ commonRouter.get("/calories", verifyToken, async (req, res) => {
   console.log(calories);
   res.send(calories);
 });
+commonRouter.get(
+  "/create-ai-plan-item",
+  verifyToken,
+  createMultipleDietPlanItems
+);
 export default commonRouter;

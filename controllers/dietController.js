@@ -716,15 +716,92 @@ export const calculateCalories = async (userId) => {
 
 export const getDietPlanItems = async (userId, planId) => {
   try {
+    console.log(userId, planId);
     const planItems = await prisma.dietPlanItem.findMany({
       where: {
-        userId,
-        diet_plan_id: planId,
+        user_id: userId,
+        diet_plan_id: planId.planId,
       },
     });
     return planItems;
   } catch (error) {
     console.error("Error getting diet plan items:", error.message);
     throw new Error("Internal server error");
+  }
+};
+
+export const createMultipleDietPlanItems = async (req, res) => {
+  const { body } = req;
+
+  try {
+    // Validate request body using Zod
+    const parsedBody = createDietPlanItemSchema.parse(body);
+
+    // Log parsed body to debug
+    console.log("Parsed body:", parsedBody);
+
+    // Prepare data for the diet plan items
+    const dietPlanItems = [
+      {
+        diet_plan_id: parsedBody.diet_plan_id,
+        meal_type: "BREAKFAST",
+        food_id: 1,
+        quantity: 100,
+        user_id: parsedBody.user_id, // Ensure user_id is passed correctly
+        plan_type: "AI",
+        date: new Date().toISOString(),
+        created_by_id: parsedBody.created_by_id, // Ensure created_by_id is passed correctly
+        status: "PENDING",
+      },
+      {
+        diet_plan_id: parsedBody.diet_plan_id,
+        meal_type: "LUNCH",
+        food_id: 2,
+        quantity: 1,
+        user_id: parsedBody.user_id,
+        plan_type: "AI",
+        date: new Date().toISOString(),
+        created_by_id: parsedBody.created_by_id,
+        status: "PENDING",
+      },
+      {
+        diet_plan_id: parsedBody.diet_plan_id,
+        meal_type: "DINNER",
+        food_id: 3,
+        quantity: 200,
+        user_id: parsedBody.user_id,
+        plan_type: "AI",
+        date: new Date().toISOString(),
+        created_by_id: parsedBody.created_by_id,
+        status: "PENDING",
+      },
+      {
+        diet_plan_id: parsedBody.diet_plan_id,
+        meal_type: "SNACK",
+        food_id: 4,
+        quantity: 150,
+        user_id: parsedBody.user_id,
+        plan_type: "AI",
+        date: new Date().toISOString(),
+        created_by_id: parsedBody.created_by_id,
+        status: "PENDING",
+      },
+    ];
+
+    // Create multiple DietPlanItems in a single query
+    const dietPlanItemsCreated = await prisma.dietPlanItem.createMany({
+      data: dietPlanItems,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Diet Plan Items created successfully",
+      dietPlanItems: dietPlanItemsCreated,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
   }
 };

@@ -427,7 +427,17 @@ export const updateUserDietPlanItem = async (req, res) => {
 
     const caloriesPerGram =
       dietPlanItem.food.calories / dietPlanItem.food.serving_size_gm;
+    const proteinPerGram =
+      dietPlanItem.food.protein / dietPlanItem.food.serving_size_gm;
+    const carbsPerGram =
+      dietPlanItem.food.carbs / dietPlanItem.food.serving_size_gm;
+    const fatsPerGram =
+      dietPlanItem.food.fats / dietPlanItem.food.serving_size_gm;
+
     const caloriesConsumed = caloriesPerGram * dietPlanItem.quantity;
+    const proteinConsumed = proteinPerGram * dietPlanItem.quantity;
+    const carbsConsumed = carbsPerGram * dietPlanItem.quantity;
+    const fatsConsumed = fatsPerGram * dietPlanItem.quantity;
 
     let dailyProgress = await prisma.dailyProgress.findUnique({
       where: {
@@ -444,6 +454,9 @@ export const updateUserDietPlanItem = async (req, res) => {
           user_id: userId,
           date: today,
           calories_intake: status === "COMPLETED" ? caloriesConsumed : 0,
+          protein_intake: status === "COMPLETED" ? proteinConsumed : 0,
+          carbs_intake: status === "COMPLETED" ? carbsConsumed : 0,
+          fats_intake: status === "COMPLETED" ? fatsConsumed : 0,
         },
       });
     } else {
@@ -457,9 +470,20 @@ export const updateUserDietPlanItem = async (req, res) => {
           },
           data: {
             calories_intake: dailyProgress.calories_intake + caloriesConsumed,
+            protein_intake: dailyProgress.protein_intake + proteinConsumed,
+            carbs_intake: dailyProgress.carbs_intake + carbsConsumed,
+            fats_intake: dailyProgress.fats_intake + fatsConsumed,
           },
         });
       } else if (status === "PENDING" && dietPlanItem.status !== "PENDING") {
+        console.log(
+          "dailyProgress protein",
+          dailyProgress.protein_intake,
+          " protein consumed",
+          proteinConsumed,
+          "subtracted",
+          dailyProgress.protein_intake - proteinConsumed
+        );
         dailyProgress = await prisma.dailyProgress.update({
           where: {
             user_id_date: {
@@ -469,6 +493,9 @@ export const updateUserDietPlanItem = async (req, res) => {
           },
           data: {
             calories_intake: dailyProgress.calories_intake - caloriesConsumed,
+            protein_intake: dailyProgress.protein_intake - proteinConsumed,
+            carbs_intake: dailyProgress.carbs_intake - carbsConsumed,
+            fats_intake: dailyProgress.fats_intake - fatsConsumed,
           },
         });
       }
@@ -532,6 +559,15 @@ export const deleteUserDietPlanItem = async (req, res) => {
       const caloriesPerGram =
         dietPlanItem.food.calories / dietPlanItem.food.serving_size_gm;
       const caloriesConsumed = caloriesPerGram * dietPlanItem.quantity;
+      const proteinPerGram =
+        dietPlanItem.food.protein / dietPlanItem.food.serving_size_gm;
+      const carbsPerGram =
+        dietPlanItem.food.carbs / dietPlanItem.food.serving_size_gm;
+      const fatsPerGram =
+        dietPlanItem.food.fats / dietPlanItem.food.serving_size_gm;
+      const proteinConsumed = proteinPerGram * dietPlanItem.quantity;
+      const carbsConsumed = carbsPerGram * dietPlanItem.quantity;
+      const fatsConsumed = fatsPerGram * dietPlanItem.quantity;
 
       const dailyProgress = await prisma.dailyProgress.findUnique({
         where: {
@@ -552,6 +588,9 @@ export const deleteUserDietPlanItem = async (req, res) => {
           },
           data: {
             calories_intake: dailyProgress.calories_intake - caloriesConsumed,
+            protein_intake: dailyProgress.protein_intake - proteinConsumed,
+            carbs_intake: dailyProgress.carbs_intake - carbsConsumed,
+            fats_intake: dailyProgress.fats_intake - fatsConsumed,
           },
         });
       }
