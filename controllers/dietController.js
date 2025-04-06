@@ -411,13 +411,19 @@ export const fetchSuggestedDietPlan = async (req, res) => {
     // });
 
     const food_items = await prisma.foodCatalogue.findMany();
-    const diet_planId = await getOrCreateDietPlan(req.userId);
+    let diet_planId = await getOrCreateDietPlan(req.userId);
+    diet_planId = diet_planId.planId;
     const calories = await calculateCalories(req.userId);
     const goal = calories.goal;
     const calories_intake = calories.dailyCalories;
+    console.log(calories_intake);
     const calories_burned = calories.caloriesToBurn;
     const planItems = await getDietPlanItems(req.userId, diet_planId);
-
+    const formattedFoodItems = food_items.map((item) => ({
+      id: item.id,
+      name: item.name,
+      calories: item.calories,
+    }));
     const client = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     });
@@ -436,14 +442,16 @@ export const fetchSuggestedDietPlan = async (req, res) => {
         - User enjoys moderate to high protein intake.\
         - User is looking for a balanced and nutritious diet.\
         - User will have all 4 types of meals(BREAKFAST,LUNCH,DINNER,SNACK) and the quantity of food items.\
-        - If ${planItems} have plan items then suggest for which mealtype is missing plan item,and it should also stisfies total calories_intake \
+        - If ${planItems} have plan items then suggest for which mealtype is missing plan item,and it should also satisfies total calories_intake and return the diet plan items which are missing\
         - Foreach meal type user will have only one food item.\
         - User should intake ${calories_intake} calories per day\
-        - The sum of all calories in suggest plan should be ${calories_burned} calories and caluculate this calories by fooditem.calories*(dietplan_item.quantity/100)\
+        - The sum of all calories in suggest plan should be ${calories_intake} calories and caluculate this calories by fooditem.calories*(dietplan_item.quantity/100)
+        -Strictly follow the provided instructions and format for output.\
 
-        - So the output Json should be like this:\
+       
         Food Items Catalogue:\
-        - ${food_items}\
+        - ${JSON.stringify(formattedFoodItems)}\
+        - So the output Json should be like this:\
         Output Format (JSON):\
         {
           diet_plan: {
@@ -452,9 +460,9 @@ export const fetchSuggestedDietPlan = async (req, res) => {
             "meal_type": "BREAKFAST",
             "food_id": 1,
             "quantity": 1,
-            "user_id": 1,
+            "user_id": ${req.userId},
             "plan_type": "AI",
-            "date": new Date(),
+            "date": "${new Date().toISOString()}",
             "created_by_id": 1,
             "status": "PENDING",
           },
@@ -462,10 +470,10 @@ export const fetchSuggestedDietPlan = async (req, res) => {
             "diet_plan_id": ${diet_planId},
             "meal_type": "LUNCH",
             "food_id": 2,
-            "quantity": 1,
-            "user_id": 1,
+            "quantity": 350,
+            "user_id": ${req.userId},
             "plan_type": "AI",
-            "date": new Date(),
+            "date": "${new Date().toISOString()}",
             "created_by_id": 1,
             "status": "PENDING",
           },
@@ -473,10 +481,10 @@ export const fetchSuggestedDietPlan = async (req, res) => {
             "diet_plan_id": ${diet_planId},
             "meal_type": "DINNER",
             "food_id": 3,
-            "quantity": 200,
-            "user_id": 1,
+            "quantity": 450,
+            "user_id": ${req.userId},
             "plan_type": "AI",
-            "date": new Date(),
+            "date": "${new Date().toISOString()}",
             "created_by_id": 1,
             "status": "PENDING",
           },
@@ -484,14 +492,14 @@ export const fetchSuggestedDietPlan = async (req, res) => {
             "diet_plan_id": ${diet_planId},
             "meal_type": "SNACK",
             "food_id": 4,
-            "quantity": 150,
-            "user_id": 1,
+            "quantity": 200,
+            "user_id": ${req.userId},
             "plan_type": "AI",
-            "date": new Date(),
+            "date": "${new Date().toISOString()}",
             "created_by_id": 1,
             "status": "PENDING",
           },
-          }
+          
             
           },
           
@@ -503,13 +511,22 @@ export const fetchSuggestedDietPlan = async (req, res) => {
         4. Do not include any additional fields or properties.\
         5. Do not include any additional food items or variations.\
         6. Do not include any food items that are not in the catalogue.\
+        7. Strictly follow the provided instructions and format for output.\
         `,
-      input: "Are semicolons optional in JavaScript?",
+      input:
+        "Suggest a diet plan for a user by following the instructions\
+      and following the format, and return the diet plan items which are missing\
+      for the user",
     });
-
+    const outputText = response.output_text;
+    const jsonStart = outputText.indexOf("```json") + 7;
+    const jsonEnd = outputText.lastIndexOf("```");
+    const jsonString = outputText.slice(jsonStart, jsonEnd).trim();
+    const dietPlan = JSON.parse(jsonString);
+    //   await createMultipleDietPlanItemsHelper(dietPlan);
     return res.status(200).json({
       success: true,
-      suggestedDietPlan: response,
+      suggestedDietPlan: dietPlan,
     });
   } catch (error) {
     return res.status(400).json({
@@ -803,5 +820,36 @@ export const createMultipleDietPlanItems = async (req, res) => {
       success: false,
       message: error.message,
     });
+  }
+};
+export const createMultipleDietPlanItemsHelper = async (parsedBody) => {
+  console.log("parsedBody", parsedBody);
+  try {
+    // Prepare data from the parsed body for the diet plan items
+    const dietPlanItems = parsedBody.diet_plan.map((item) => ({
+      diet_plan_id: item.diet_plan_id, // Assuming diet_plan_id comes from the parsedBody
+      meal_type: item.meal_type, // Meal type directly from parsed body
+      food_id: item.food_id, // Food ID directly from parsed body
+      quantity: item.quantity, // Quantity directly from parsed body
+      user_id: item.user_id, // User ID directly from parsed body
+      plan_type: item.plan_type || "AI", // Assuming the plan type is always "AI"
+      date: item.date || new Date().toISOString(), // Current date as the date for the diet plan item
+      created_by_id: item.created_by_id, // Created by ID from parsed body
+      status: item.status || "PENDING", // Assuming all items are initially PENDING
+    }));
+    console.log("dietPlanItems", dietPlanItems);
+    // Insert multiple diet plan items into the database using Prisma
+    const dietPlanItemsCreated = await prisma.dietPlanItem.createMany({
+      data: dietPlanItems,
+    });
+
+    // Return success message with created diet plan items
+    return {
+      success: true,
+      message: "Diet Plan Items created successfully",
+      dietPlanItems: dietPlanItemsCreated,
+    };
+  } catch (error) {
+    throw new Error(error.message);
   }
 };
