@@ -1,6 +1,7 @@
 import express from "express";
 import { checkPermissions, verifyToken } from "../middlewares/verifyToken.js";
 import {
+  adminDashboard,
   createUsers,
   deleteUser,
   getUserById,
@@ -370,4 +371,6 @@ adminRouter.delete(
   checkPermissions(["DELETE_ORDER"]),
   deleteOrder
 );
+//dashboard
+adminRouter.get("/admin-dashboard", verifyToken, adminDashboard);
 export default adminRouter;

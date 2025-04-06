@@ -277,3 +277,77 @@ export const getUserById = async (req, res) => {
     return res.status(400).json({ success: false, message: error.message });
   }
 };
+
+export const adminDashboard = async (req, res) => {
+  try {
+    // Get the total number of Users
+    const totalUsers = await prisma.user.count();
+
+    // Get the total number of Vendors
+    const totalVendors = await prisma.user.count({
+      where: { role: { role_name: "VENDOR" } },
+    });
+
+    // Get the total number of Products
+    const totalProducts = await prisma.product.count();
+
+    // Get the total number of Activities
+    const totalActivities = await prisma.activity.count();
+
+    // Get the total number of Food Items
+    const totalFoodItems = await prisma.foodCatalogue.count();
+
+    // Get the total calories burned by all users
+    const totalCaloriesBurned = await prisma.dailyProgress.aggregate({
+      _sum: {
+        calories_burned: true,
+      },
+    });
+
+    // Get the number of Diet Programs
+    const totalDietPrograms = await prisma.dietPlan.count();
+
+    // Get the number of Workout Programs
+    const totalWorkoutPrograms = await prisma.workoutPlan.count();
+
+    // Get the total sales (from orders)
+    const totalSales = await prisma.order.aggregate({
+      _sum: {
+        total_price: true,
+      },
+      where: {
+        status: "DELIVERED",
+      },
+    });
+
+    // Get weekly progress (Last 7 days)
+    const weeklyProgress = await prisma.dailyProgress.aggregate({
+      _sum: {
+        calories_burned: true,
+        steps_count: true,
+        water_intake: true,
+      },
+      where: {
+        user_id: req.userId,
+        date: {
+          gte: new Date(new Date().setDate(new Date().getDate() - 7)),
+        },
+      },
+    });
+    return res.status(200).json({
+      success: true,
+      totalUsers,
+      totalVendors,
+      totalProducts,
+      totalActivities,
+      totalFoodItems,
+      totalCaloriesBurned,
+      totalDietPrograms,
+      totalWorkoutPrograms,
+      totalSales,
+      weeklyProgress,
+    });
+  } catch (error) {
+    return res.status(400).json({ success: false, message: error.message });
+  }
+};
