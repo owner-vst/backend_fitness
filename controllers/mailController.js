@@ -2,7 +2,9 @@ import nodemailer from "nodemailer";
 import {
   PASSWORD_RESET_REQUEST_TEMPLATE,
   PASSWORD_RESET_SUCCESS_TEMPLATE,
+  VERIFICATION_EMAIL_OTP_TEMPLATE,
   VERIFICATION_EMAIL_TEMPLATE,
+  WELCOME_EMAIL_TEMPLATE,
 } from "../utils/mailTemplate.js";
 
 // Nodemailer transporter setup
@@ -45,7 +47,7 @@ export const sendWelcomeEmail = async (email, name) => {
     from: sender,
     to: email,
     subject: "Welcome to Insightstracker",
-    html: `<p>Welcome, ${name}! Thank you for joining Insightstracker.</p>`,
+    html: WELCOME_EMAIL_TEMPLATE.replace("{name}", name),
   };
 
   try {
@@ -98,7 +100,7 @@ export const sendOtpEmail = async (email, otp) => {
     from: sender,
     to: email,
     subject: "Your OTP for Insightstracker",
-    html: `<p>Your OTP is ${otp}. It will expire in 5 minutes.</p>`,
+    html: VERIFICATION_EMAIL_OTP_TEMPLATE.replace("{otp}", otp),
   };
 
   try {
