@@ -6,6 +6,7 @@ import {
   getLastMessages,
   getUsersList,
   sendMessage,
+  unreadMessagesCount,
 } from "../controllers/chatController.js";
 import {
   getUserProfile,
@@ -34,6 +35,7 @@ commonRouter.get("/me", verifyToken, Me);
 commonRouter.get("/get-users", verifyToken, getUsersList);
 commonRouter.get("/get-convo", verifyToken, getConversation);
 commonRouter.post("/send-message", verifyToken, sendMessage);
+commonRouter.get("/unread-messages-count", verifyToken, unreadMessagesCount);
 commonRouter.get("/get-last-message", verifyToken, getLastMessages);
 
 commonRouter.post("/update-profile", verifyToken, updateUserProfile);

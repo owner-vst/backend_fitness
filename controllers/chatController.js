@@ -274,3 +274,24 @@ export const getUsersList = async (req, res) => {
     });
   }
 };
+export const unreadMessagesCount = async (req, res) => {
+  try {
+    const currentUserId = req.userId;
+    if (!currentUserId) {
+      return res.status(401).json({ message: "User not authenticated" });
+    }
+    const unreadCount = await prisma.message.count({
+      where: {
+        receiver_id: currentUserId,
+        status: "SENT", // Assuming 'SENT' means unread and 'READ' means the message has been read
+      },
+    });
+    return res.status(200).json({ unreadMessagesCount: unreadCount });
+  } catch (error) {
+    console.error("Error fetching conversation:", error);
+    return res.status(500).json({
+      message: "Error fetching conversation",
+      error: error.message,
+    });
+  }
+};
