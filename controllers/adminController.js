@@ -319,7 +319,21 @@ export const adminDashboard = async (req, res) => {
         status: "DELIVERED",
       },
     });
-
+    const totalSalesCount = await prisma.order.count({
+      where: {
+        status: "DELIVERED",
+      },
+    });
+    const userDietPlans = await prisma.dietPlan.count({
+      where: {
+        user_id: req.userId, // Replace with the specific user's ID
+      },
+    });
+    const userWorkoutPlans = await prisma.workoutPlan.count({
+      where: {
+        user_id: req.userId, // Replace with the specific user's ID
+      },
+    });
     // Get weekly progress (Last 7 days)
     const weeklyProgress = await prisma.dailyProgress.aggregate({
       _sum: {
@@ -346,6 +360,9 @@ export const adminDashboard = async (req, res) => {
       totalWorkoutPrograms,
       totalSales,
       weeklyProgress,
+      totalSalesCount,
+      userDietPlans,
+      userWorkoutPlans,
     });
   } catch (error) {
     return res.status(400).json({ success: false, message: error.message });
