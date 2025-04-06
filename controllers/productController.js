@@ -247,3 +247,213 @@ export const getAllProducts = async (req, res) => {
     });
   }
 };
+
+export const addToCart = async (req, res) => {
+  const userId = req.userId; // Assume the user ID comes from the authenticated session or JWT
+  const { productId, quantity } = req.body; // Product ID and quantity to be added to the cart
+
+  try {
+    if (quantity <= 0) {
+      return res
+        .status(400)
+        .json({ message: "Quantity must be greater than 0" });
+    }
+
+    // Check if the product already exists in the cart for this user
+    const existingCartItem = await prisma.cart.findFirst({
+      where: {
+        user_id: userId,
+        product_id: productId,
+      },
+    });
+
+    if (existingCartItem) {
+      // If the item exists, update the quantity
+      const updatedCartItem = await prisma.cart.update({
+        where: {
+          id: existingCartItem.id,
+        },
+        data: {
+          quantity: existingCartItem.quantity + quantity, // Add quantity to existing cart item
+        },
+      });
+
+      return res.status(200).json({
+        message: "Cart item updated successfully",
+        data: updatedCartItem,
+      });
+    }
+
+    // If the item doesn't exist in the cart, create a new entry
+    const newCartItem = await prisma.cart.create({
+      data: {
+        user_id: userId,
+        product_id: productId,
+        quantity,
+      },
+    });
+
+    return res.status(201).json({
+      message: "Item added to cart successfully",
+      data: newCartItem,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Get all items in the Cart
+export const getCart = async (req, res) => {
+  try {
+    // Get all cart items for the user
+    const cartItems = await prisma.cart.findMany({
+      where: {
+        user_id: req.userId,
+      },
+      include: {
+        product: true, // Include related product details here
+      },
+    });
+
+    if (cartItems.length === 0) {
+      return res.status(404).json({ message: "No items found in cart" });
+    }
+
+    return res.status(200).json({
+      message: "Cart fetched successfully",
+      data: cartItems,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+export const addToWishlist = async (req, res) => {
+  const userId = req.userId; // Assume the user ID comes from the authenticated session or JWT
+  const { productId } = req.body; // Product ID to be added to the wishlist
+
+  try {
+    // Check if the product already exists in the wishlist for this user
+    const existingWishlistItem = await prisma.wishlist.findFirst({
+      where: {
+        user_id: userId,
+        product_id: productId,
+      },
+    });
+
+    if (existingWishlistItem) {
+      return res.status(400).json({ message: "Item already in wishlist" });
+    }
+
+    // Create a new wishlist entry
+    const newWishlistItem = await prisma.wishlist.create({
+      data: {
+        user_id: userId,
+        product_id: productId,
+      },
+    });
+
+    return res.status(201).json({
+      message: "Item added to wishlist successfully",
+      data: newWishlistItem,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Get all items in the Wishlist
+export const getWishlist = async (req, res) => {
+  const  userId  = req.userId; // Assume the user ID comes from the authenticated session or JWT
+
+  try {
+    // Get all wishlist items for the user
+    const wishlistItems = await prisma.wishlist.findMany({
+      where: {
+        user_id: userId,
+      },
+      include: {
+        product: true, // You can include related product details here
+      },
+    });
+
+    if (wishlistItems.length === 0) {
+      return res.status(404).json({ message: "No items found in wishlist" });
+    }
+
+    return res.status(200).json({
+      message: "Wishlist fetched successfully",
+      data: wishlistItems,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+export const deleteFromWishlist = async (req, res) => {
+  const userId = req.userId; // Assume the user ID comes from the authenticated session or JWT
+  const { productId } = req.params; // Get product ID from request params
+
+  try {
+    // Check if the item exists in the wishlist
+    const existingWishlistItem = await prisma.wishlist.findFirst({
+      where: {
+        user_id: userId,
+        product_id: parseInt(productId),
+      },
+    });
+
+    if (!existingWishlistItem) {
+      return res.status(404).json({ message: "Item not found in wishlist" });
+    }
+
+    // Delete the wishlist item
+    await prisma.wishlist.delete({
+      where: {
+        id: existingWishlistItem.id,
+      },
+    });
+
+    return res.status(200).json({
+      message: "Item removed from wishlist successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const deleteFromCart = async (req, res) => {
+  const userId = req.userId; // Assume the user ID comes from the authenticated session or JWT
+  const { productId } = req.params; // Get product ID from request params
+
+  try {
+    // Check if the item exists in the cart
+    const existingCartItem = await prisma.cart.findFirst({
+      where: {
+        user_id: userId,
+        product_id: parseInt(productId),
+      },
+    });
+
+    if (!existingCartItem) {
+      return res.status(404).json({ message: "Item not found in cart" });
+    }
+
+    // Delete the cart item
+    await prisma.cart.delete({
+      where: {
+        id: existingCartItem.id,
+      },
+    });
+
+    return res.status(200).json({
+      message: "Item removed from cart successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};

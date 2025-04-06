@@ -20,6 +20,14 @@ import {
 } from "../controllers/dietController.js";
 import { getDailyStats, getStats } from "../controllers/statsController.js";
 import { fetchSuggestedWorkoutPlan } from "../controllers/workoutController.js";
+import {
+  addToCart,
+  addToWishlist,
+  deleteFromCart,
+  deleteFromWishlist,
+  getCart,
+  getWishlist,
+} from "../controllers/productController.js";
 
 const commonRouter = express.Router();
 commonRouter.get("/me", verifyToken, Me);
@@ -59,4 +67,20 @@ commonRouter.get(
   verifyToken,
   createMultipleDietPlanItems
 );
+
+commonRouter.post("/add-to-cart", verifyToken, addToCart);
+commonRouter.get("/get-cart", verifyToken, getCart);
+commonRouter.post("/add-to-wishlist", verifyToken, addToWishlist);
+commonRouter.get("/get-wishlist", verifyToken, getWishlist);
+commonRouter.delete(
+  "/delete-from-wishlist/:productId",
+  verifyToken,
+  deleteFromWishlist
+);
+commonRouter.delete(
+  "/delete-from-cart/:productId",
+  verifyToken,
+  deleteFromCart
+);
+
 export default commonRouter;
