@@ -534,7 +534,7 @@ export const fetchSuggestedDietPlan = async (req, res) => {
       .replace(/\t/g, "");
 
     const dietPlan = JSON.parse(cleanedResponse);
-    await createMultipleDietPlanItemsHelper(dietPlan, diet_planId);
+    await createMultipleDietPlanItemsHelper(dietPlan, diet_planId, req.userId);
     return res.status(200).json({
       success: true,
       suggestedDietPlan: dietPlan,
@@ -592,21 +592,34 @@ export const getOrCreateWorkoutPlan = async (userId) => {
 
 export const getOrCreateDietPlan = async (userId) => {
   try {
-    // Get the current date in UTC
-    const today = new Date();
-    today.setUTCHours(0, 0, 0, 0); // Normalize the date to start of the UTC day
+    // Get the current date and time in UTC
+    const now = new Date();
 
-    // Calculate the end of the day in UTC
-    const endOfDay = new Date(today);
-    endOfDay.setUTCHours(23, 59, 59, 999); // End of the UTC day
+    // Calculate the offset for IST (UTC+5:30)
+    const istOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
 
-    // Check if there's an existing plan for the user today (in UTC)
+    // Construct the current day in IST (midnight IST)
+    const istToday = new Date(now.getTime() + istOffset);
+    istToday.setUTCHours(0, 0, 0, 0);
+
+    // Calculate the end of the day in IST (23:59:59.999)
+    const endOfDay = new Date(istToday);
+    endOfDay.setUTCHours(23, 59, 59, 999);
+
+    // Convert both dates to ISO string format to ensure IST handling
+    const todayISOString = istToday.toISOString();
+    const endOfDayISOString = endOfDay.toISOString();
+
+    console.log("todayISOString:", todayISOString); // Should reflect IST correctly
+    console.log("endOfDayISOString:", endOfDayISOString); // End of day in IST
+
+    // Check if there's an existing plan for the user today (in IST)
     const existingPlan = await prisma.dietPlan.findFirst({
       where: {
         user_id: userId,
         date: {
-          gte: today, // Greater than or equal to the start of today
-          lt: endOfDay, // Less than the start of the next day
+          gte: todayISOString, // Greater than or equal to the start of today in IST
+          lt: endOfDayISOString, // Less than the start of the next day in IST
         },
       },
     });
@@ -620,8 +633,7 @@ export const getOrCreateDietPlan = async (userId) => {
     const newPlan = await prisma.dietPlan.create({
       data: {
         user_id: userId,
-        date: today, // Set date to the UTC start of the day
-        // You can add other default fields like created_at if needed
+        date: todayISOString, // Set date to the IST start of the day
       },
     });
 
@@ -835,12 +847,20 @@ export const createMultipleDietPlanItems = async (req, res) => {
 };
 export const createMultipleDietPlanItemsHelper = async (
   parsedBody,
-  diet_planId
+  diet_planId,
+  userId
 ) => {
   console.log("parsedBody", parsedBody);
   console.log("diet_planId", diet_planId);
-  const today = new Date();
-  today.setUTCHours(0, 0, 0, 0);
+  const dateToBeUpdated = await prisma.dietPlan.findFirst({
+    where: {
+      id: diet_planId,
+    },
+    select: {
+      date: true,
+    },
+  });
+  console.log("dateToBeUpdated", dateToBeUpdated);
 
   try {
     // Fetch the existing diet plan items from the database for comparison
@@ -869,7 +889,7 @@ export const createMultipleDietPlanItemsHelper = async (
           quantity: item.quantity,
           user_id: item.user_id,
           plan_type: item.plan_type || "AI", // Default "AI" if missing
-          date: today.toISOString(),
+          date: dateToBeUpdated.date,
           created_by_id: item.created_by_id,
           status: item.status || "PENDING", // Default "PENDING" if missing
         };
