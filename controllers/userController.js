@@ -124,7 +124,9 @@ export const getUserWorkoutPlanItems = async (req, res) => {
   return res.status(200).json({ success: true, workoutPlans });
 };
 const UpdateDietPlanSchema = z.object({
+
   planItemId: z.number(),
+  quantity: z.number(),
   status: z.enum(["COMPLETED", "SKIPPED", "PENDING"]),
 });
 export const updateUserWorkoutPlanItems = async (req, res) => {
@@ -369,11 +371,39 @@ export const getUserDietPlanItems = async (req, res) => {
         },
       },
       include: {
-        items: true,
+        items: {
+          select: {
+            id: true, // Include item id
+            quantity: true, // Include quantity
+            status: true, // Include status
+            food: {
+              // Include related food item details
+              select: {
+                id: true, // Food id
+                name: true, // Food name
+                carbs: true, // Carbs value
+                protein: true, // Protein value
+                fats: true, // Fats value
+              },
+            },
+          },
+        },
       },
     });
+    const mappedDietPlans = dietPlans.map((plan) => ({
+      ...plan,
+      items: plan.items.map((item) => ({
+        id: item.id,
+        foodItem: item.food.name, // Get food name from food relation
+        carbs: item.food.carbs, // Get carbs from food relation
+        protein: item.food.protein, // Get protein from food relation
+        fats: item.food.fats, // Get fats from food relation
+        quantity: item.quantity, // Get quantity
+        status: item.status, // Get status
+      })),
+    }));
 
-    return res.status(200).json({ success: true, dietPlans });
+    return res.status(200).json({ success: true, dietPlan: mappedDietPlans });
   } catch (error) {
     console.error(error);
     res
@@ -385,11 +415,27 @@ export const getUserDietPlanItems = async (req, res) => {
 // 2️ Update Diet Plan Item
 export const updateUserDietPlanItem = async (req, res) => {
   try {
-    const { planItemId, status } = UpdateDietPlanItemSchema.parse(req.body);
+    const { planItemId, quantity,status } = UpdateDietPlanItemSchema.parse(req.body);
     const userId = req.userId;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
 
+    // Get current date in IST (Indian Standard Time)
+    const now = new Date();
+
+    // Calculate the offset for IST (UTC+5:30)
+    const istOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
+
+    // Construct the current day in IST (midnight IST)
+    const istToday = new Date(now.getTime() + istOffset);
+    istToday.setUTCHours(0, 0, 0, 0);
+
+    // Calculate the end of the day in IST (23:59:59.999)
+    const endOfDay = new Date(istToday);
+    endOfDay.setUTCHours(23, 59, 59, 999);
+
+    // Convert both dates to ISO string format to ensure IST handling
+    const todayISOString = istToday.toISOString();
+
+    // Fetch the diet plan item
     const dietPlanItem = await prisma.dietPlanItem.findUnique({
       where: { id: planItemId },
       include: { food: true },
@@ -401,19 +447,21 @@ export const updateUserDietPlanItem = async (req, res) => {
         .json({ success: false, message: "Diet plan item not found" });
     }
 
-    const dietPlanItemDate = new Date(dietPlanItem.date);
-    dietPlanItemDate.setUTCHours(0, 0, 0, 0);
-    const today1 = new Date();
-    const normalizedTodayUTC = new Date(today1.toISOString());
-    normalizedTodayUTC.setUTCHours(0, 0, 0, 0);
+    // Normalize dietPlanItem date to IST and set it to midnight
+    console.log("Diet Plan Item Date:", dietPlanItem.date);
 
-    if (dietPlanItemDate.getTime() !== normalizedTodayUTC.getTime()) {
+    console.log("Diet Plan Item Date:", dietPlanItem.date);
+    console.log("Today IST:", todayISOString);
+
+    // Check if the date matches today (ignoring time)
+    if (dietPlanItem.date.toISOString() !== todayISOString) {
       return res.status(404).json({
         success: false,
         message: "You can't change an old diet plan item",
       });
     }
 
+    // Fetch user profile
     const userProfile = await prisma.userProfile.findUnique({
       where: { user_id: userId },
       select: { weight: true },
@@ -425,6 +473,7 @@ export const updateUserDietPlanItem = async (req, res) => {
         .json({ success: false, message: "User profile not found" });
     }
 
+    // Calculate calories, protein, carbs, and fats per gram
     const caloriesPerGram =
       dietPlanItem.food.calories / dietPlanItem.food.serving_size_gm;
     const proteinPerGram =
@@ -434,25 +483,28 @@ export const updateUserDietPlanItem = async (req, res) => {
     const fatsPerGram =
       dietPlanItem.food.fats / dietPlanItem.food.serving_size_gm;
 
+    // Calculate consumption based on quantity
     const caloriesConsumed = caloriesPerGram * dietPlanItem.quantity;
     const proteinConsumed = proteinPerGram * dietPlanItem.quantity;
     const carbsConsumed = carbsPerGram * dietPlanItem.quantity;
     const fatsConsumed = fatsPerGram * dietPlanItem.quantity;
 
+    // Check if there is already daily progress for today
     let dailyProgress = await prisma.dailyProgress.findUnique({
       where: {
         user_id_date: {
           user_id: userId,
-          date: today,
+          date: todayISOString, // Use today in IST
         },
       },
     });
 
     if (!dailyProgress) {
+      // Create a new daily progress entry if none exists
       dailyProgress = await prisma.dailyProgress.create({
         data: {
           user_id: userId,
-          date: today,
+          date: todayISOString,
           calories_intake: status === "COMPLETED" ? caloriesConsumed : 0,
           protein_intake: status === "COMPLETED" ? proteinConsumed : 0,
           carbs_intake: status === "COMPLETED" ? carbsConsumed : 0,
@@ -460,12 +512,14 @@ export const updateUserDietPlanItem = async (req, res) => {
         },
       });
     } else {
+      // Update the daily progress based on the status change
       if (status === "COMPLETED" && dietPlanItem.status !== "COMPLETED") {
+        // Add the consumed values to daily progress if the status is changing to "COMPLETED"
         dailyProgress = await prisma.dailyProgress.update({
           where: {
             user_id_date: {
               user_id: userId,
-              date: today,
+              date: todayISOString,
             },
           },
           data: {
@@ -476,19 +530,12 @@ export const updateUserDietPlanItem = async (req, res) => {
           },
         });
       } else if (status === "PENDING" && dietPlanItem.status !== "PENDING") {
-        console.log(
-          "dailyProgress protein",
-          dailyProgress.protein_intake,
-          " protein consumed",
-          proteinConsumed,
-          "subtracted",
-          dailyProgress.protein_intake - proteinConsumed
-        );
+        // Subtract the consumed values from daily progress if the status is changing to "PENDING"
         dailyProgress = await prisma.dailyProgress.update({
           where: {
             user_id_date: {
               user_id: userId,
-              date: today,
+              date: todayISOString,
             },
           },
           data: {
@@ -501,11 +548,13 @@ export const updateUserDietPlanItem = async (req, res) => {
       }
     }
 
+    // Update the status of the diet plan item
     const updatedPlanItem = await prisma.dietPlanItem.update({
       where: { id: planItemId },
       data: { status: status },
     });
 
+    // Respond with the updated diet plan item and daily progress
     res.status(200).json({ success: true, updatedPlanItem, dailyProgress });
   } catch (error) {
     console.error(error);
@@ -514,11 +563,105 @@ export const updateUserDietPlanItem = async (req, res) => {
 };
 
 // 3️ Delete Diet Plan Item
+// export const deleteUserDietPlanItem = async (req, res) => {
+//   const { planItemId } = req.params;
+//   const userId = req.userId;
+
+//   try {
+//     const dietPlanItem = await prisma.dietPlanItem.findUnique({
+//       where: { id: parseInt(planItemId) },
+//       include: { food: true, diet_plan: true },
+//     });
+
+//     if (!dietPlanItem) {
+//       return res
+//         .status(404)
+//         .json({ success: false, message: "Diet plan item not found" });
+//     }
+
+//     const today = new Date();
+//     today.setHours(0, 0, 0, 0);
+//     const dietPlanItemDate = new Date(dietPlanItem.date);
+//     dietPlanItemDate.setUTCHours(0, 0, 0, 0);
+//     const today1 = new Date();
+//     const normalizedTodayUTC = new Date(today1.toISOString());
+//     normalizedTodayUTC.setUTCHours(0, 0, 0, 0);
+// console.log(dietPlanItemDate, normalizedTodayUTC);
+//     if (dietPlanItemDate.getTime() !== normalizedTodayUTC.getTime()) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "You can't delete an old diet plan item",
+//       });
+//     }
+
+//     if (dietPlanItem.status === "COMPLETED") {
+//       const userProfile = await prisma.userProfile.findUnique({
+//         where: { user_id: userId },
+//       });
+
+//       if (!userProfile) {
+//         return res
+//           .status(404)
+//           .json({ success: false, message: "User profile not found" });
+//       }
+
+//       const caloriesPerGram =
+//         dietPlanItem.food.calories / dietPlanItem.food.serving_size_gm;
+//       const caloriesConsumed = caloriesPerGram * dietPlanItem.quantity;
+//       const proteinPerGram =
+//         dietPlanItem.food.protein / dietPlanItem.food.serving_size_gm;
+//       const carbsPerGram =
+//         dietPlanItem.food.carbs / dietPlanItem.food.serving_size_gm;
+//       const fatsPerGram =
+//         dietPlanItem.food.fats / dietPlanItem.food.serving_size_gm;
+//       const proteinConsumed = proteinPerGram * dietPlanItem.quantity;
+//       const carbsConsumed = carbsPerGram * dietPlanItem.quantity;
+//       const fatsConsumed = fatsPerGram * dietPlanItem.quantity;
+
+//       const dailyProgress = await prisma.dailyProgress.findUnique({
+//         where: {
+//           user_id_date: {
+//             user_id: userId,
+//             date: today,
+//           },
+//         },
+//       });
+
+//       if (dailyProgress) {
+//         await prisma.dailyProgress.update({
+//           where: {
+//             user_id_date: {
+//               user_id: userId,
+//               date: today,
+//             },
+//           },
+//           data: {
+//             calories_intake: dailyProgress.calories_intake - caloriesConsumed,
+//             protein_intake: dailyProgress.protein_intake - proteinConsumed,
+//             carbs_intake: dailyProgress.carbs_intake - carbsConsumed,
+//             fats_intake: dailyProgress.fats_intake - fatsConsumed,
+//           },
+//         });
+//       }
+//     }
+
+//     const deletedDietPlanItem = await prisma.dietPlanItem.delete({
+//       where: { id: parseInt(planItemId) },
+//     });
+
+//     res.status(200).json({ success: true, deletedDietPlanItem });
+//   } catch (error) {
+//     console.error("Error during deletion process:", error);
+//     res.status(500).json({ success: false, message: "Internal server error" });
+//   }
+// };
+
 export const deleteUserDietPlanItem = async (req, res) => {
   const { planItemId } = req.params;
   const userId = req.userId;
 
   try {
+    // Fetch the diet plan item from the database
     const dietPlanItem = await prisma.dietPlanItem.findUnique({
       where: { id: parseInt(planItemId) },
       include: { food: true, diet_plan: true },
@@ -530,21 +673,32 @@ export const deleteUserDietPlanItem = async (req, res) => {
         .json({ success: false, message: "Diet plan item not found" });
     }
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const dietPlanItemDate = new Date(dietPlanItem.date);
-    dietPlanItemDate.setUTCHours(0, 0, 0, 0);
-    const today1 = new Date();
-    const normalizedTodayUTC = new Date(today1.toISOString());
-    normalizedTodayUTC.setUTCHours(0, 0, 0, 0);
+    // Get current date in IST (Indian Standard Time)
+    const now = new Date();
 
-    if (dietPlanItemDate.getTime() !== normalizedTodayUTC.getTime()) {
+    // Calculate the offset for IST (UTC+5:30)
+    const istOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
+
+    // Construct the current day in IST (midnight IST)
+    const istToday = new Date(now.getTime() + istOffset);
+    istToday.setUTCHours(0, 0, 0, 0);
+
+    // Calculate the end of the day in IST (23:59:59.999)
+    const endOfDay = new Date(istToday);
+    endOfDay.setUTCHours(23, 59, 59, 999);
+
+    // Convert both dates to ISO string format to ensure IST handling
+    const todayISOString = istToday.toISOString();
+
+    // Compare the dates (ignoring time) between today and the diet plan item date
+    if (dietPlanItem.date.toISOString() !== todayISOString) {
       return res.status(404).json({
         success: false,
         message: "You can't delete an old diet plan item",
       });
     }
 
+    // Proceed with the deletion logic if the dates match (same day)
     if (dietPlanItem.status === "COMPLETED") {
       const userProfile = await prisma.userProfile.findUnique({
         where: { user_id: userId },
@@ -573,7 +727,7 @@ export const deleteUserDietPlanItem = async (req, res) => {
         where: {
           user_id_date: {
             user_id: userId,
-            date: today,
+            date: todayISOString, // Use today in IST
           },
         },
       });
@@ -583,7 +737,7 @@ export const deleteUserDietPlanItem = async (req, res) => {
           where: {
             user_id_date: {
               user_id: userId,
-              date: today,
+              date: todayISOString,
             },
           },
           data: {
@@ -596,6 +750,7 @@ export const deleteUserDietPlanItem = async (req, res) => {
       }
     }
 
+    // Delete the diet plan item from the database
     const deletedDietPlanItem = await prisma.dietPlanItem.delete({
       where: { id: parseInt(planItemId) },
     });

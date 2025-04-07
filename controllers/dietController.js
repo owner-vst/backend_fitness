@@ -925,3 +925,65 @@ export const createMultipleDietPlanItemsHelper = async (
     throw new Error(error.message);
   }
 };
+export const getOrCreateDailyProgress = async (userId) => {
+  try {
+    // Get the current date and time in UTC
+    const now = new Date();
+
+    // Calculate the offset for IST (UTC+5:30)
+    const istOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
+
+    // Construct the current day in IST (midnight IST)
+    const istToday = new Date(now.getTime() + istOffset);
+    istToday.setUTCHours(0, 0, 0, 0); // Set to midnight IST
+
+    // Calculate the end of the day in IST (23:59:59.999)
+    const endOfDay = new Date(istToday);
+    endOfDay.setUTCHours(23, 59, 59, 999); // Set to 23:59:59.999 IST
+
+    // Convert both dates to ISO string format to ensure IST handling
+    const todayISOString = istToday.toISOString();
+    const endOfDayISOString = endOfDay.toISOString();
+
+    console.log("Start of today IST:", todayISOString); // Start of today in IST
+    console.log("End of today IST:", endOfDayISOString); // End of today in IST
+
+    // Check if there's an existing daily progress record for today
+    const existingProgress = await prisma.dailyProgress.findFirst({
+      where: {
+        user_id: userId,
+        date: {
+          gte: istToday, // Start of today in IST
+          lt: endOfDay, // End of today in IST
+        },
+      },
+    });
+
+    // If the daily progress already exists, return it
+    if (existingProgress) {
+      return { dailyProgressId: existingProgress.id };
+    }
+
+    // If no progress exists, create a new daily progress record for today
+    const newDailyProgress = await prisma.dailyProgress.create({
+      data: {
+        user_id: userId,
+        date: todayISOString, // Set date to the start of the day in IST
+        calories_intake: 0,
+        calories_burned: 0,
+        protein_intake: 0,
+        carbs_intake: 0,
+        fats_intake: 0,
+        steps_count: 0,
+        water_intake: 0,
+        goal_status: "ON_TRACK", // Set the initial status to ON_TRACK
+      },
+    });
+
+    // Return the new daily progress ID
+    return { dailyProgressId: newDailyProgress.id };
+  } catch (error) {
+    console.error("Error fetching or creating daily progress:", error);
+    throw new Error("Something went wrong while handling the daily progress.");
+  }
+};

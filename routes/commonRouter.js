@@ -16,6 +16,7 @@ import {
   calculateCalories,
   createMultipleDietPlanItems,
   fetchSuggestedDietPlan,
+  getOrCreateDailyProgress,
   getOrCreateDietPlan,
   getOrCreateWorkoutPlan,
 } from "../controllers/dietController.js";
@@ -58,6 +59,11 @@ commonRouter.get("/diet-plan-id", verifyToken, async (req, res) => {
   const planId = await getOrCreateDietPlan(req.userId);
   console.log(planId);
   res.send(planId);
+});
+commonRouter.get("/get-daily-progress-id", verifyToken, async (req, res) => {
+  const dailyProgress = await getOrCreateDailyProgress(req.userId);
+  console.log(dailyProgress);
+  res.send(dailyProgress);
 });
 commonRouter.get("/calories", verifyToken, async (req, res) => {
   const calories = await calculateCalories(req.userId);
