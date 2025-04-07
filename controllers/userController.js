@@ -124,9 +124,7 @@ export const getUserWorkoutPlanItems = async (req, res) => {
   return res.status(200).json({ success: true, workoutPlans });
 };
 const UpdateDietPlanSchema = z.object({
-
   planItemId: z.number(),
-  quantity: z.number(),
   status: z.enum(["COMPLETED", "SKIPPED", "PENDING"]),
 });
 export const updateUserWorkoutPlanItems = async (req, res) => {
@@ -350,6 +348,7 @@ export const deleteUserWorkoutPlanItem = async (req, res) => {
 // Schema for updating Diet Plan Items
 const UpdateDietPlanItemSchema = z.object({
   planItemId: z.number(),
+  quantity: z.number(),
   status: z.enum(["COMPLETED", "SKIPPED", "PENDING"]),
 });
 
@@ -415,7 +414,9 @@ export const getUserDietPlanItems = async (req, res) => {
 // 2️ Update Diet Plan Item
 export const updateUserDietPlanItem = async (req, res) => {
   try {
-    const { planItemId, quantity,status } = UpdateDietPlanItemSchema.parse(req.body);
+    const { planItemId, quantity, status } = UpdateDietPlanItemSchema.parse(
+      req.body
+    );
     const userId = req.userId;
 
     // Get current date in IST (Indian Standard Time)
@@ -484,10 +485,10 @@ export const updateUserDietPlanItem = async (req, res) => {
       dietPlanItem.food.fats / dietPlanItem.food.serving_size_gm;
 
     // Calculate consumption based on quantity
-    const caloriesConsumed = caloriesPerGram * dietPlanItem.quantity;
-    const proteinConsumed = proteinPerGram * dietPlanItem.quantity;
-    const carbsConsumed = carbsPerGram * dietPlanItem.quantity;
-    const fatsConsumed = fatsPerGram * dietPlanItem.quantity;
+    const caloriesConsumed = caloriesPerGram * quantity;
+    const proteinConsumed = proteinPerGram * quantity;
+    const carbsConsumed = carbsPerGram * quantity;
+    const fatsConsumed = fatsPerGram * quantity;
 
     // Check if there is already daily progress for today
     let dailyProgress = await prisma.dailyProgress.findUnique({
