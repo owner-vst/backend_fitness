@@ -114,14 +114,33 @@ export const getUserWorkoutPlanItems = async (req, res) => {
       },
     },
     include: {
-      items: true,
+      items: {
+        select: {
+          id: true,
+          status: true,
+          duration: true,
+          activity: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
     },
   });
-  //   const workoutPlans = await prisma.$queryRaw`
-  //  SELECT id, date FROM WorkoutPlan WHERE user_id = 8 AND date = '2025-03-27';;
-  // `;
 
-  return res.status(200).json({ success: true, workoutPlans });
+  const mappedWorkoutPlans = workoutPlans.map((plan) => ({
+    ...plan,
+    items: plan.items.map((item) => ({
+      id: item.id,
+      status: item.status,
+      duration: item.duration,
+      activity: item.activity.name,
+    })),
+  }));
+
+  return res.status(200).json({ success: true, workoutPlans: mappedWorkoutPlans });
 };
 const UpdateDietPlanSchema = z.object({
   planItemId: z.number(),

@@ -40,6 +40,8 @@ userRouter.post(
   createWorkoutPlanItem
 );
 
+
+//diet-plan
 userRouter.get(
   "/get-diet-plan",
   verifyToken,
