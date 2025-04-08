@@ -547,49 +547,6 @@ export const fetchSuggestedDietPlan = async (req, res) => {
   }
 };
 
-export const getOrCreateWorkoutPlan = async (userId) => {
-  try {
-    // Get the current date in UTC
-    const today = new Date();
-    today.setUTCHours(0, 0, 0, 0); // Normalize the date to start of the UTC day
-
-    // Calculate the end of the day in UTC
-    const endOfDay = new Date(today);
-    endOfDay.setUTCHours(23, 59, 59, 999); // End of the UTC day
-
-    // Check if there's an existing plan for the user today (in UTC)
-    const existingPlan = await prisma.workoutPlan.findFirst({
-      where: {
-        user_id: userId,
-        date: {
-          gte: today, // Greater than or equal to the start of today
-          lt: endOfDay, // Less than the start of the next day
-        },
-      },
-    });
-
-    // If the plan already exists for today, return the plan ID
-    if (existingPlan) {
-      return { planId: existingPlan.id };
-    }
-
-    // If no plan exists, create a new workout plan for the user
-    const newPlan = await prisma.workoutPlan.create({
-      data: {
-        user_id: userId,
-        date: today, // Set date to the UTC start of the day
-        // You can add other default fields like created_at if needed
-      },
-    });
-
-    // Return the new plan ID
-    return { planId: newPlan.id };
-  } catch (error) {
-    console.error("Error fetching or creating workout plan:", error);
-    throw new Error("Something went wrong while handling the workout plan.");
-  }
-};
-
 export const getOrCreateDietPlan = async (userId) => {
   try {
     // Get the current date and time in UTC

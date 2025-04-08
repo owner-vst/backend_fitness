@@ -18,10 +18,12 @@ import {
   fetchSuggestedDietPlan,
   getOrCreateDailyProgress,
   getOrCreateDietPlan,
-  getOrCreateWorkoutPlan,
 } from "../controllers/dietController.js";
 import { getDailyStats, getStats } from "../controllers/statsController.js";
-import { fetchSuggestedWorkoutPlan } from "../controllers/workoutController.js";
+import {
+  fetchSuggestedWorkoutPlan,
+  getOrCreateWorkoutPlan,
+} from "../controllers/workoutController.js";
 import {
   addToCart,
   addToWishlist,

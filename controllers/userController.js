@@ -1,9 +1,8 @@
 import prisma from "../db/prismaClient.js";
 import { z } from "zod";
-import { updateDietPlan } from "./planController.js";
-import { startOfDay } from "date-fns";
-import { compareSync } from "bcryptjs";
+
 import { getOrCreateDietPlan } from "./dietController.js";
+import { getOrCreateWorkoutPlan } from "./workoutController.js";
 
 // export const getUserWorkoutPlanItems = async (req, res) => {
 //   const userId = req.userId; // Assume user ID is available from the authenticated request
@@ -126,16 +125,25 @@ export const getUserWorkoutPlanItems = async (req, res) => {
 };
 const UpdateDietPlanSchema = z.object({
   planItemId: z.number(),
+  duration: z.number(),
   status: z.enum(["COMPLETED", "SKIPPED", "PENDING"]),
 });
 export const updateUserWorkoutPlanItems = async (req, res) => {
   try {
-    const { planItemId, status } = UpdateDietPlanSchema.parse(req.body);
+    const { planItemId, status, duration } = UpdateDietPlanSchema.parse(
+      req.body
+    );
     const userId = req.userId; // Assuming user ID is available in the request (JWT or session)
-    const today = new Date();
-    console.log("Current Date: from update func", today);
+    const now = new Date();
 
-    // Get the workout plan item by planItemId to get activity and its duration
+    // Calculate the offset for IST (UTC+5:30)
+    const istOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
+
+    // Construct the current day in IST (midnight IST)
+    const istToday = new Date(now.getTime() + istOffset);
+    istToday.setUTCHours(0, 0, 0, 0);
+
+    // Fetch the workout plan item by planItemId to get activity and its duration
     const workoutPlanItem = await prisma.workoutPlanItem.findUnique({
       where: { id: planItemId },
       include: {
@@ -143,30 +151,23 @@ export const updateUserWorkoutPlanItems = async (req, res) => {
       },
     });
     console.log("workoutPlanItem", workoutPlanItem);
-    const workoutPlanItemDate = new Date(workoutPlanItem.date);
-    workoutPlanItemDate.setUTCHours(0, 0, 0, 0); // Normalize to 00:00:00 UTC
-    console.log("workoutPlanItemDate", workoutPlanItemDate);
-    // Normalize the `today` date to remove the time part, assuming we want to compare using the local time zone
-    const today1 = new Date();
-    today.setHours(0, 0, 0, 0); // Set the local time to 00:00:00 (ignoring time)
-    console.log("today", today);
-    // Normalize `today` to UTC, so both are in the same time zone for comparison
-    const normalizedTodayUTC = new Date(today1.toISOString());
-    normalizedTodayUTC.setUTCHours(0, 0, 0, 0);
-    console.log("normalizedTodayUTC", normalizedTodayUTC);
-    // Compare the dates
-    if (workoutPlanItemDate.getTime() !== normalizedTodayUTC.getTime()) {
-      return res.status(404).json({
-        success: false,
-        message: "You can't change an old workout plan item",
-      });
-    }
+
     if (!workoutPlanItem) {
       return res
         .status(404)
         .json({ success: false, message: "Workout plan item not found" });
     }
-    //if date is not equal to today then return you cant change old workout plan item
+
+    const workoutPlanItemDate = new Date(workoutPlanItem.date);
+    workoutPlanItemDate.setUTCHours(0, 0, 0, 0); // Normalize to 00:00:00 UTC
+
+    // Compare the dates - workoutPlanItemDate with IST Today
+    if (workoutPlanItemDate.getTime() !== istToday.getTime()) {
+      return res.status(404).json({
+        success: false,
+        message: "You can't change an old workout plan item",
+      });
+    }
 
     // Get the user's weight from the profile
     const userProfile = await prisma.userProfile.findUnique({
@@ -182,16 +183,14 @@ export const updateUserWorkoutPlanItems = async (req, res) => {
 
     // Calculate calories burned per minute for the activity
     const caloriesPerMinute = workoutPlanItem.activity.calories_per_kg / 60;
-    const caloriesBurned =
-      userProfile.weight * caloriesPerMinute * workoutPlanItem.duration;
+    const caloriesBurned = userProfile.weight * caloriesPerMinute * duration;
 
     // Check if there is an existing DailyProgress entry for the user and the current date
-
     let dailyProgress = await prisma.dailyProgress.findUnique({
       where: {
         user_id_date: {
           user_id: userId,
-          date: today, // Pass the Date object directly
+          date: istToday.toISOString(), // Pass the IST normalized date string
         },
       },
     });
@@ -201,7 +200,7 @@ export const updateUserWorkoutPlanItems = async (req, res) => {
       dailyProgress = await prisma.dailyProgress.create({
         data: {
           user_id: userId,
-          date: today, // Pass the Date object directly
+          date: istToday.toISOString(), // Pass the IST normalized date string
           calories_burned: status === "COMPLETED" ? caloriesBurned : 0, // Initialize if completed
         },
       });
@@ -213,7 +212,7 @@ export const updateUserWorkoutPlanItems = async (req, res) => {
           where: {
             user_id_date: {
               user_id: userId,
-              date: today, // Pass the Date object directly
+              date: istToday.toISOString(),
             },
           },
           data: {
@@ -226,7 +225,7 @@ export const updateUserWorkoutPlanItems = async (req, res) => {
           where: {
             user_id_date: {
               user_id: userId,
-              date: today, // Pass the Date object directly
+              date: istToday.toISOString(),
             },
           },
           data: {
@@ -268,18 +267,26 @@ export const deleteUserWorkoutPlanItem = async (req, res) => {
         .status(404)
         .json({ success: false, message: "Workout plan item not found" });
     }
-    const today1 = new Date();
-    // Normalize workout plan item's date to 00:00:00 to compare with today's date
+
+    // Get current date in IST (Indian Standard Time)
+    const now = new Date();
+
+    // Calculate the offset for IST (UTC+5:30)
+    const istOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
+
+    // Construct the current day in IST (midnight IST)
+    const istToday = new Date(now.getTime() + istOffset);
+    istToday.setUTCHours(0, 0, 0, 0);
+
+    // Convert both dates to ISO string format to ensure IST handling
+    const todayISOString = istToday.toISOString();
+
+    // Normalize workout plan item's date to 00:00:00 UTC
     const workoutPlanItemDate = new Date(workoutPlanItem.date);
     workoutPlanItemDate.setUTCHours(0, 0, 0, 0); // Normalize to 00:00:00 UTC
 
-    // Normalize today's date to 00:00:00 to ignore the time part
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Normalize today's date to 00:00:00 (ignoring time)
-    const normalizedTodayUTC = new Date(today1.toISOString());
-    normalizedTodayUTC.setUTCHours(0, 0, 0, 0);
-    // Compare the dates to check if it's today's workout plan item
-    if (workoutPlanItemDate.getTime() !== normalizedTodayUTC.getTime()) {
+    // Compare the dates (ignoring time) between today and the workout plan item date
+    if (workoutPlanItemDate.toISOString() !== todayISOString) {
       return res.status(404).json({
         success: false,
         message: "You can't delete an old workout plan item",
@@ -313,18 +320,19 @@ export const deleteUserWorkoutPlanItem = async (req, res) => {
         where: {
           user_id_date: {
             user_id: userId,
-            date: todayDate, // Use today's date for comparison
+            date: todayISOString, // Use today's date for comparison
           },
         },
       });
-
+      console.log(dailyProgress);
       if (dailyProgress) {
         // Subtract the calories burned by this activity from the daily progress
+
         await prisma.dailyProgress.update({
           where: {
             user_id_date: {
               user_id: userId,
-              date: todayDate,
+              date: todayISOString,
             },
           },
           data: {
@@ -343,6 +351,55 @@ export const deleteUserWorkoutPlanItem = async (req, res) => {
   } catch (error) {
     console.error("Error during deletion process:", error);
     res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+export const createWorkoutPlanItemSchema = z.object({
+  activity_id: z.number().int().positive(), // Ensuring activity_id is a positive integer
+  duration: z.number().int().positive(), // Ensuring duration is a positive integer (in minutes or another unit)
+});
+export const createWorkoutPlanItem = async (req, res) => {
+  const { body } = req;
+
+  try {
+    // Validate request body using Zod
+
+    const parsedBody = createWorkoutPlanItemSchema.parse(body);
+
+    // Continue with the rest of your logic
+    const planId = await getOrCreateWorkoutPlan(req.userId); // Assuming there's a function to get or create a workout plan
+    const date = await prisma.workoutPlan.findFirst({
+      where: {
+        user_id: req.userId,
+        id: planId.planId,
+      },
+      select: {
+        date: true,
+      },
+    });
+
+    const workoutPlanItem = await prisma.workoutPlanItem.create({
+      data: {
+        workout_plan_id: planId.planId,
+        activity_id: parsedBody.activity_id,
+        duration: parsedBody.duration,
+        status: "PENDING", // Default status can be PENDING
+        date: date.date, // Using the validated date
+        plan_type: "USER", // Default plan type is USER
+        created_by_id: req.userId,
+        user_id: req.userId,
+      },
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Workout Plan Item created successfully",
+      workoutPlanItem,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.errors ? error.errors[0].message : error.message, // Error handling from Zod
+    });
   }
 };
 

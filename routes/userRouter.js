@@ -3,6 +3,7 @@ import { checkPermissions, verifyToken } from "../middlewares/verifyToken.js";
 import {
   createDietPlanItem,
   createFoodCatalogueUser,
+  createWorkoutPlanItem,
   deleteUserDietPlanItem,
   deleteUserWorkoutPlanItem,
   getFoodCatalogue,
@@ -11,6 +12,7 @@ import {
   updateUserDietPlanItem,
   updateUserWorkoutPlanItems,
 } from "../controllers/userController.js";
+import { getWeeklyProgressStats } from "../controllers/DietStatsController.js";
 
 const userRouter = express.Router();
 
@@ -31,6 +33,11 @@ userRouter.delete(
   verifyToken,
   checkPermissions(["VIEW_WORKOUT_PLAN"]),
   deleteUserWorkoutPlanItem
+);
+userRouter.post(
+  "/create-workout-plan-item",
+  verifyToken,
+  createWorkoutPlanItem
 );
 
 userRouter.get(
@@ -54,4 +61,5 @@ userRouter.delete(
 userRouter.post("/create-diet-plan-item", verifyToken, createDietPlanItem);
 userRouter.get("/get-food-catalogue", verifyToken, getFoodCatalogue);
 userRouter.post("/create-food-item", verifyToken, createFoodCatalogueUser);
+userRouter.get("/get-weekly-diet-stats", verifyToken, getWeeklyProgressStats);
 export default userRouter;

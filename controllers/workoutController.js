@@ -427,7 +427,11 @@ export const fetchSuggestedWorkoutPlan = async (req, res) => {
     const jsonEnd = outputText.lastIndexOf("```");
     const jsonString = outputText.slice(jsonStart, jsonEnd).trim();
     const workoutPlan = JSON.parse(jsonString);
-    // await createMultipleWorkoutPlanItemsHelper(workoutPlan);
+    await createMultipleWorkoutPlanItemsHelper(
+      workoutPlan,
+      workout_planId,
+      req.userId
+    );
     return res.status(200).json({
       success: true,
       suggestedWorkoutPlan: workoutPlan,
@@ -442,20 +446,30 @@ export const fetchSuggestedWorkoutPlan = async (req, res) => {
 export const getOrCreateWorkoutPlan = async (userId) => {
   try {
     // Get the current date in UTC
-    const today = new Date();
-    today.setUTCHours(0, 0, 0, 0); // Normalize the date to start of the UTC day
+    const now = new Date();
 
-    // Calculate the end of the day in UTC
-    const endOfDay = new Date(today);
-    endOfDay.setUTCHours(23, 59, 59, 999); // End of the UTC day
+    // Calculate the offset for IST (UTC+5:30)
+    const istOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
 
+    // Construct the current day in IST (midnight IST)
+    const istToday = new Date(now.getTime() + istOffset);
+    istToday.setUTCHours(0, 0, 0, 0);
+
+    // Calculate the end of the day in IST (23:59:59.999)
+    const endOfDay = new Date(istToday);
+    endOfDay.setUTCHours(23, 59, 59, 999);
+
+    // Convert both dates to ISO string format to ensure IST handling
+    const todayISOString = istToday.toISOString();
+    const endOfDayISOString = endOfDay.toISOString();
     // Check if there's an existing plan for the user today (in UTC)
     const existingPlan = await prisma.workoutPlan.findFirst({
       where: {
         user_id: userId,
         date: {
-          gte: today, // Greater than or equal to the start of today
-          lt: endOfDay, // Less than the start of the next day
+          gte: todayISOString, // Greater than or equal to the start of today in IST
+          lt: endOfDayISOString, // Less than the start of the next day in IST
+          // Less than the start of the next day
         },
       },
     });
@@ -469,7 +483,7 @@ export const getOrCreateWorkoutPlan = async (userId) => {
     const newPlan = await prisma.workoutPlan.create({
       data: {
         user_id: userId,
-        date: today, // Set date to the UTC start of the day
+        date: todayISOString, // Set date to the UTC start of the day
         // You can add other default fields like created_at if needed
       },
     });
@@ -605,5 +619,92 @@ export const getWorkoutPlanItems = async (userId, planId) => {
   } catch (error) {
     console.error("Error getting diet plan items:", error.message);
     throw new Error("Internal server error");
+  }
+};
+export const createMultipleWorkoutPlanItemsHelper = async (
+  parsedBody,
+  workout_planId,
+  userId
+) => {
+  console.log("parsedBody", parsedBody);
+  console.log("workout_planId", workout_planId);
+
+  // Fetch the date associated with the workout plan to be updated
+  const dateToBeUpdated = await prisma.workoutPlan.findFirst({
+    where: {
+      id: workout_planId,
+    },
+    select: {
+      date: true,
+    },
+  });
+  console.log("dateToBeUpdated", dateToBeUpdated);
+
+  try {
+    // Fetch the existing workout plan items for comparison
+    const existingWorkoutPlans = await prisma.workoutPlanItem.findMany({
+      where: {
+        workout_plan_id: workout_planId,
+        user_id: userId, // Filter by user_id to avoid duplicates
+      },
+    });
+    console.log("existingWorkoutPlans", existingWorkoutPlans);
+
+    // Extract existing activity IDs from the database
+    const existingActivityIds = existingWorkoutPlans.map(
+      (item) => item.activity_id
+    );
+
+    // Prepare data for missing workout plan items only
+    const workoutPlanItems = [];
+
+    // Iterate through the parsedBody workout_plan object and check if each activity already exists
+    for (let item of Object.values(parsedBody.workout_plan)) {
+      // Check if the activity_id already exists in the existing database
+      if (!existingActivityIds.includes(item.activity_id)) {
+        // If not, create a new item to insert into the database
+        const newItem = {
+          workout_plan_id: workout_planId,
+          activity_id: item.activity_id,
+          duration: item.duration,
+          user_id: userId,
+          plan_type: item.plan_type || "AI", // Default to "AI" if missing
+          date: dateToBeUpdated.date,
+          created_by_id: item.created_by_id,
+          status: item.status || "PENDING", // Default to "PENDING" if missing
+        };
+
+        // Add missing item to the workoutPlanItems array
+        workoutPlanItems.push(newItem);
+      }
+    }
+
+    // Limit the number of items to create to 3
+    const limitedWorkoutPlanItems = workoutPlanItems.slice(0, 3);
+
+    console.log("workoutPlanItems to be created:", limitedWorkoutPlanItems);
+
+    // If there are items to create, insert them into the database
+    if (limitedWorkoutPlanItems.length > 0) {
+      const workoutPlanItemsCreated = await prisma.workoutPlanItem.createMany({
+        data: limitedWorkoutPlanItems,
+      });
+
+      // Return success message with created workout plan items
+      return {
+        success: true,
+        message: "Workout Plan Items created successfully",
+        workoutPlanItems: workoutPlanItemsCreated,
+      };
+    } else {
+      // If all items already exist, return a message indicating that
+      return {
+        success: true,
+        message: "All workout plan items already exist in the database",
+      };
+    }
+  } catch (error) {
+    console.error("Error creating workout plan items:", error);
+    throw new Error(error.message);
   }
 };
