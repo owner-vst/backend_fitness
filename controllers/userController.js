@@ -3,6 +3,7 @@ import { z } from "zod";
 import { updateDietPlan } from "./planController.js";
 import { startOfDay } from "date-fns";
 import { compareSync } from "bcryptjs";
+import { getOrCreateDietPlan } from "./dietController.js";
 
 // export const getUserWorkoutPlanItems = async (req, res) => {
 //   const userId = req.userId; // Assume user ID is available from the authenticated request
@@ -552,12 +553,16 @@ export const updateUserDietPlanItem = async (req, res) => {
     // Update the status of the diet plan item
     const updatedPlanItem = await prisma.dietPlanItem.update({
       where: { id: planItemId },
-      data: { status: status , quantity: quantity},
-
+      data: { status: status, quantity: quantity },
     });
 
     // Respond with the updated diet plan item and daily progress
-    res.status(200).json({ success: true, updatedPlanItem, dailyProgress });
+    res.status(200).json({
+      success: true,
+      message: "Diet Plan Item updated successfully",
+      updatedPlanItem,
+      dailyProgress,
+    });
   } catch (error) {
     console.error(error);
     res.status(400).json({ success: false, message: "Invalid request body" });
@@ -757,9 +762,153 @@ export const deleteUserDietPlanItem = async (req, res) => {
       where: { id: parseInt(planItemId) },
     });
 
-    res.status(200).json({ success: true, deletedDietPlanItem });
+    res.status(200).json({
+      success: true,
+      message: "Diet Plan Item deleted successfully",
+      deletedDietPlanItem,
+    });
   } catch (error) {
     console.error("Error during deletion process:", error);
     res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+const createDietPlanItemSchema = z.object({
+  // diet_plan_id: z.number().min(1, "Diet Plan ID is required"),
+  meal_type: z.enum(
+    ["BREAKFAST", "LUNCH", "DINNER", "SNACK"],
+    "Invalid meal type"
+  ),
+  food_id: z.number().min(1, "Food ID is required"),
+  quantity: z.number().min(0.1, "Quantity must be greater than zero"),
+});
+export const createDietPlanItem = async (req, res) => {
+  const { body } = req;
+
+  try {
+    // Validate request body using Zod
+    const parsedBody = createDietPlanItemSchema.parse(body);
+    const planId = await getOrCreateDietPlan(req.userId);
+    const date = await prisma.dietPlan.findFirst({
+      where: {
+        user_id: req.userId,
+        id: planId.planId,
+      },
+      select: {
+        date: true,
+      },
+    });
+
+    // Create new DietPlanItem
+    const dietPlanItem = await prisma.dietPlanItem.create({
+      data: {
+        diet_plan_id: planId.planId,
+        meal_type: parsedBody.meal_type,
+        food_id: parsedBody.food_id,
+        quantity: parsedBody.quantity,
+        user_id: req.userId,
+        plan_type: "USER", // Default to "USER" if not provided
+        date: date.date,
+        created_by_id: req.userId,
+      },
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Diet Plan Item created successfully",
+      dietPlanItem,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const getFoodCatalogue = async (req, res) => {
+  try {
+    // Step 1: Fetch all food items from the database
+    const foods = await prisma.foodCatalogue.findMany({
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    // Step 2: Check if there are no food items
+    if (foods.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No food items found",
+      });
+    }
+
+    // Step 3: Return all food items
+    return res.status(200).json({
+      success: true,
+      foods,
+    });
+  } catch (error) {
+    // Step 4: Handle any errors
+    return res.status(400).json({ success: false, message: error.message });
+  }
+};
+export const createFoodCatalogueSchemaUser = z.object({
+  name: z.string().min(1, "Food name is required"),
+  calories: z.number().min(1, "Calories must be a positive number"),
+  carbs: z.number().min(0, "Carbs must be a positive number"),
+  protein: z.number().min(0, "Protein must be a positive number"),
+  fats: z.number().min(0, "Fats must be a positive number"),
+  serving_size_gm: z.number().min(1, "Serving size must be a positive number"),
+});
+
+export const createFoodCatalogueUser = async (req, res) => {
+  let body;
+  try {
+    body = await req.body;
+
+    // Step 1: Validate body using Zod schema
+    if (!body) {
+      return res
+        .status(400)
+        .json({ message: "Request body is empty or malformed" });
+    }
+
+    const parsedBody = createFoodCatalogueSchemaUser.parse(body); // Zod schema validation
+
+    // Step 2: Check if Food already exists
+    const foodExists = await prisma.foodCatalogue.findUnique({
+      where: { name: parsedBody.name },
+    });
+
+    if (foodExists) {
+      return res.status(400).json({
+        success: false,
+        message: "Food item with this name already exists",
+      });
+    }
+
+    // Step 3: Create Food in the database
+    const food = await prisma.foodCatalogue.create({
+      data: {
+        name: parsedBody.name,
+        calories: parsedBody.calories,
+        carbs: parsedBody.carbs,
+        protein: parsedBody.protein,
+        fats: parsedBody.fats,
+        serving_size_gm: parsedBody.serving_size_gm,
+        user_id: req.userId,
+      },
+    });
+
+    // Step 4: Return success response
+    return res.status(201).json({
+      success: true,
+      message: "Food item created successfully",
+      food,
+    });
+  } catch (error) {
+    return res.status(400).json({ success: false, message: error.message });
   }
 };

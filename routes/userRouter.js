@@ -1,8 +1,11 @@
 import express from "express";
 import { checkPermissions, verifyToken } from "../middlewares/verifyToken.js";
 import {
+  createDietPlanItem,
+  createFoodCatalogueUser,
   deleteUserDietPlanItem,
   deleteUserWorkoutPlanItem,
+  getFoodCatalogue,
   getUserDietPlanItems,
   getUserWorkoutPlanItems,
   updateUserDietPlanItem,
@@ -48,4 +51,7 @@ userRouter.delete(
   checkPermissions(["VIEW_DIET_PLAN"]),
   deleteUserDietPlanItem
 );
+userRouter.post("/create-diet-plan-item", verifyToken, createDietPlanItem);
+userRouter.get("/get-food-catalogue", verifyToken, getFoodCatalogue);
+userRouter.post("/create-food-item", verifyToken, createFoodCatalogueUser);
 export default userRouter;
