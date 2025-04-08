@@ -140,7 +140,9 @@ export const getUserWorkoutPlanItems = async (req, res) => {
     })),
   }));
 
-  return res.status(200).json({ success: true, workoutPlans: mappedWorkoutPlans });
+  return res
+    .status(200)
+    .json({ success: true, workoutPlans: mappedWorkoutPlans });
 };
 const UpdateDietPlanSchema = z.object({
   planItemId: z.number(),
@@ -201,7 +203,9 @@ export const updateUserWorkoutPlanItems = async (req, res) => {
     }
 
     // Calculate calories burned per minute for the activity
-    const caloriesPerMinute = workoutPlanItem.activity.calories_per_kg / 60;
+    const caloriesPerMinute =
+      workoutPlanItem.activity.calories_per_kg /
+      workoutPlanItem.activity.duration;
     const caloriesBurned = userProfile.weight * caloriesPerMinute * duration;
 
     // Check if there is an existing DailyProgress entry for the user and the current date
@@ -257,7 +261,7 @@ export const updateUserWorkoutPlanItems = async (req, res) => {
     // Update the workout plan item's status
     const updatedPlanItem = await prisma.workoutPlanItem.update({
       where: { id: planItemId },
-      data: { status: status },
+      data: { status: status, duration: duration },
     });
 
     res.status(200).json({ success: true, updatedPlanItem, dailyProgress });
@@ -326,7 +330,9 @@ export const deleteUserWorkoutPlanItem = async (req, res) => {
       }
 
       // Calculate calories burned based on the activity's calorie burn rate and user's weight
-      const caloriesPerMinute = workoutPlanItem.activity.calories_per_kg / 60; // Calories burned per kg per minute
+      const caloriesPerMinute =
+        workoutPlanItem.activity.calories_per_kg /
+        workoutPlanItem.activity.duration; // Calories burned per kg per minute
       const caloriesBurned =
         userProfile.weight * caloriesPerMinute * workoutPlanItem.duration; // Total calories burned
 
@@ -419,6 +425,88 @@ export const createWorkoutPlanItem = async (req, res) => {
       success: false,
       message: error.errors ? error.errors[0].message : error.message, // Error handling from Zod
     });
+  }
+};
+
+export const getActivities = async (req, res) => {
+  try {
+    // Fetch activities from the database
+    const activities = await prisma.activity.findMany({
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    // Check if no activities are found
+    if (activities.length === 0) {
+      return res
+        .status(404)
+        .json({ success: false, message: "No activities found" });
+    }
+
+    // Return success response with activities
+    res.status(200).json({ success: true, activities });
+  } catch (error) {
+    // Handle unexpected errors
+    console.error(error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+export const createActivitySchemaUser = z.object({
+  name: z.string().min(1, "Activity name is required"), // Ensures the name is a non-empty string
+  duration: z.number().min(1, "Duration must be at least 1 min"), // Ensures duration is at least 1 hour
+  calories_per_kg: z
+    .number()
+    .min(0, "Calories per kg must be a positive number"), // Positive value for calories
+  // Optional, in case the activity isn't associated with a specific user
+});
+
+export const createActivityUser = async (req, res) => {
+  let body;
+  try {
+    body = await req.body;
+
+    // Step 1: Validate body using Zod schema
+    if (!body) {
+      return res
+        .status(400)
+        .json({ message: "Request body is empty or malformed" });
+    }
+
+    const parsedBody = createActivitySchemaUser.parse(body); // Zod schema validation
+
+    // Step 2: Check if Activity already exists
+    const activityExists = await prisma.activity.findUnique({
+      where: { name: parsedBody.name },
+    });
+
+    if (activityExists) {
+      return res.status(400).json({
+        success: false,
+        message: "Activity with this name already exists",
+      });
+    }
+
+    // Step 3: Create Activity in the database
+    const activity = await prisma.activity.create({
+      data: {
+        name: parsedBody.name,
+        duration: parsedBody.duration, // Duration in hours (e.g., 1 hour)
+        calories_per_kg: parsedBody.calories_per_kg, // Calories burned per kg per hour
+        user_id: req.userId || null, // Optional user, can be null
+      },
+    });
+
+    // Step 4: Return success response
+    return res.status(201).json({
+      success: true,
+      message: "Activity created successfully",
+      activity,
+    });
+  } catch (error) {
+    return res.status(400).json({ success: false, message: error.message });
   }
 };
 

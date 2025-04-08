@@ -1,11 +1,13 @@
 import express from "express";
 import { checkPermissions, verifyToken } from "../middlewares/verifyToken.js";
 import {
+  createActivityUser,
   createDietPlanItem,
   createFoodCatalogueUser,
   createWorkoutPlanItem,
   deleteUserDietPlanItem,
   deleteUserWorkoutPlanItem,
+  getActivities,
   getFoodCatalogue,
   getUserDietPlanItems,
   getUserWorkoutPlanItems,
@@ -39,7 +41,7 @@ userRouter.post(
   verifyToken,
   createWorkoutPlanItem
 );
-
+userRouter.post("/create-activity", verifyToken, createActivityUser);
 
 //diet-plan
 userRouter.get(
@@ -64,4 +66,5 @@ userRouter.post("/create-diet-plan-item", verifyToken, createDietPlanItem);
 userRouter.get("/get-food-catalogue", verifyToken, getFoodCatalogue);
 userRouter.post("/create-food-item", verifyToken, createFoodCatalogueUser);
 userRouter.get("/get-weekly-diet-stats", verifyToken, getWeeklyProgressStats);
+userRouter.get("/get-activities", verifyToken, getActivities);
 export default userRouter;
