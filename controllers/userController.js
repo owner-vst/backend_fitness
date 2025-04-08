@@ -552,7 +552,8 @@ export const updateUserDietPlanItem = async (req, res) => {
     // Update the status of the diet plan item
     const updatedPlanItem = await prisma.dietPlanItem.update({
       where: { id: planItemId },
-      data: { status: status },
+      data: { status: status , quantity: quantity},
+
     });
 
     // Respond with the updated diet plan item and daily progress
