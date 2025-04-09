@@ -152,7 +152,7 @@ export const getDailyStats = async (req, res) => {
     // Get the start and end of the current week
     const startOfWeek = getStartOfWeek();
     const endOfWeek = getEndOfWeek();
-    console.log(startOfWeek, endOfWeek);
+  
     // const startOfLastWeek = getStartOfLastWeek();
     // const endOfLastWeek = getEndOfLastWeek();
     // Fetch workout plan items for the user in the current week
@@ -169,7 +169,7 @@ export const getDailyStats = async (req, res) => {
         activity: true, // Include activity data to access its calories_per_kg
       },
     });
-console.log(workoutPlanItems);
+
     // Prepare the result object
     const activitiesSummary = workoutPlanItems.reduce((acc, item) => {
       const activityName = item.activity.name;

@@ -103,8 +103,7 @@ export const getUserWorkoutPlanItems = async (req, res) => {
   const startOfDay = new Date(requestedDate.setHours(0, 0, 0, 0));
   // Get the end of the day (23:59:59.999)
   const endOfDay = new Date(requestedDate.setHours(23, 59, 59, 999));
-  console.log("Start of day:", startOfDay);
-  console.log("End of day:", endOfDay);
+
   const workoutPlans = await prisma.workoutPlan.findMany({
     where: {
       user_id: userId,
@@ -171,7 +170,7 @@ export const updateUserWorkoutPlanItems = async (req, res) => {
         activity: true, // To get the activity data (calories_per_kg)
       },
     });
-    console.log("workoutPlanItem", workoutPlanItem);
+   
 
     if (!workoutPlanItem) {
       return res
@@ -349,7 +348,7 @@ export const deleteUserWorkoutPlanItem = async (req, res) => {
           },
         },
       });
-      console.log(dailyProgress);
+
       if (dailyProgress) {
         // Subtract the calories burned by this activity from the daily progress
 
@@ -614,11 +613,7 @@ export const updateUserDietPlanItem = async (req, res) => {
     }
 
     // Normalize dietPlanItem date to IST and set it to midnight
-    console.log("Diet Plan Item Date:", dietPlanItem.date);
-
-    console.log("Diet Plan Item Date:", dietPlanItem.date);
-    console.log("Today IST:", todayISOString);
-
+    
     // Check if the date matches today (ignoring time)
     if (dietPlanItem.date.toISOString() !== todayISOString) {
       return res.status(404).json({
@@ -1071,6 +1066,127 @@ export const createFoodCatalogueUser = async (req, res) => {
       success: true,
       message: "Food item created successfully",
       food,
+    });
+  } catch (error) {
+    return res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+export const userDashboard = async (req, res) => {
+  try {
+    const totalCaloriesBurnedUser = await prisma.dailyProgress.aggregate({
+      where: {
+        user_id: req.userId,
+      },
+      _sum: {
+        calories_burned: true,
+      },
+    });
+
+    // Get the number of Diet Programs
+    const totalUserDietPrograms = await prisma.dietPlan.count({
+      where: {
+        user_id: req.userId,
+      },
+    });
+
+    // Get the number of Workout Programs
+    const totalUserWorkoutPrograms = await prisma.workoutPlan.count({
+      where: {
+        user_id: req.userId,
+      },
+    });
+    const weeklyProgress = await prisma.dailyProgress.aggregate({
+      _sum: {
+        calories_burned: true,
+        steps_count: true,
+        water_intake: true,
+      },
+      where: {
+        user_id: req.userId,
+        date: {
+          gte: new Date(new Date().setDate(new Date().getDate() - 7)),
+        },
+      },
+    });
+    return res.status(200).json({
+      success: true,
+      totalCaloriesBurnedUser,
+      totalUserDietPrograms,
+      totalUserWorkoutPrograms,
+      weeklyProgress,
+    });
+  } catch (error) {
+    return res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+export const vendorDashboard = async (req, res) => {
+  try {
+    const totalCaloriesBurnedUser = await prisma.dailyProgress.aggregate({
+      where: {
+        user_id: req.userId,
+      },
+      _sum: {
+        calories_burned: true,
+      },
+    });
+
+    // Get the number of Diet Programs
+    const totalUserDietPrograms = await prisma.dietPlan.count({
+      where: {
+        user_id: req.userId,
+      },
+    });
+
+    // Get the number of Workout Programs
+    const totalUserWorkoutPrograms = await prisma.workoutPlan.count({
+      where: {
+        user_id: req.userId,
+      },
+    });
+    const weeklyProgress = await prisma.dailyProgress.aggregate({
+      _sum: {
+        calories_burned: true,
+        steps_count: true,
+        water_intake: true,
+      },
+      where: {
+        user_id: req.userId,
+        date: {
+          gte: new Date(new Date().setDate(new Date().getDate() - 7)),
+        },
+      },
+    });
+    const totalVendors = await prisma.user.count({
+      where: { role: { role_name: "VENDOR" } },
+    });
+
+    // Get the total number of Products
+    const totalProducts = await prisma.product.count();
+    const totalSales = await prisma.order.aggregate({
+      _sum: {
+        total_price: true,
+      },
+      where: {
+        status: "DELIVERED",
+      },
+    });
+    const totalSalesCount = await prisma.order.count({
+      where: {
+        status: "DELIVERED",
+      },
+    });
+    return res.status(200).json({
+      success: true,
+      totalCaloriesBurnedUser,
+      totalUserDietPrograms,
+      totalUserWorkoutPrograms,
+      weeklyProgress,
+      totalProducts,
+      totalVendors,
+      totalSales,
+      totalSalesCount,
     });
   } catch (error) {
     return res.status(400).json({ success: false, message: error.message });

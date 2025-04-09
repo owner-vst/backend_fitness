@@ -303,12 +303,28 @@ export const adminDashboard = async (req, res) => {
         calories_burned: true,
       },
     });
+    const totalCaloriesBurnedUser = await prisma.dailyProgress.aggregate({
+      where: {
+        user_id: req.userId,
+      },
+      _sum: {
+        calories_burned: true,
+      },
+    });
 
     // Get the number of Diet Programs
-    const totalDietPrograms = await prisma.dietPlan.count();
+    const totalUserDietPrograms = await prisma.dietPlan.count({
+      where: {
+        user_id: req.userId,
+      },
+    });
 
     // Get the number of Workout Programs
-    const totalWorkoutPrograms = await prisma.workoutPlan.count();
+    const totalUserWorkoutPrograms = await prisma.workoutPlan.count({
+      where: {
+        user_id: req.userId,
+      },
+    });
 
     // Get the total sales (from orders)
     const totalSales = await prisma.order.aggregate({
@@ -356,10 +372,11 @@ export const adminDashboard = async (req, res) => {
       totalActivities,
       totalFoodItems,
       totalCaloriesBurned,
-      totalDietPrograms,
-      totalWorkoutPrograms,
+      totalUserDietPrograms,
+      totalUserWorkoutPrograms,
       totalSales,
       weeklyProgress,
+      totalCaloriesBurnedUser,
       totalSalesCount,
       userDietPlans,
       userWorkoutPlans,

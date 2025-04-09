@@ -54,22 +54,22 @@ commonRouter.get("/personal-stats", verifyToken, getStats);
 commonRouter.get("/workout-stats", verifyToken, getDailyStats);
 commonRouter.get("/workout-plan-id", verifyToken, async (req, res) => {
   const planId = await getOrCreateWorkoutPlan(req.userId);
-  console.log(planId);
+ 
   res.send(planId);
 });
 commonRouter.get("/diet-plan-id", verifyToken, async (req, res) => {
   const planId = await getOrCreateDietPlan(req.userId);
-  console.log(planId);
+  
   res.send(planId);
 });
 commonRouter.get("/get-daily-progress-id", verifyToken, async (req, res) => {
   const dailyProgress = await getOrCreateDailyProgress(req.userId);
-  console.log(dailyProgress);
+  
   res.send(dailyProgress);
 });
 commonRouter.get("/calories", verifyToken, async (req, res) => {
   const calories = await calculateCalories(req.userId);
-  console.log(calories);
+ 
   res.send(calories);
 });
 commonRouter.get(

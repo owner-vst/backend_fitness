@@ -28,7 +28,7 @@ export const getWeeklyProgressStats = async (req, res) => {
     // Get the start and end of the current week
     const startOfWeek = getStartOfWeek();
     const endOfWeek = getEndOfWeek();
-    console.log(startOfWeek, endOfWeek);
+   
 
     // Fetch DailyProgress data for the user for the current week
     const dailyProgressItems = await prisma.dailyProgress.findMany({
@@ -40,7 +40,7 @@ export const getWeeklyProgressStats = async (req, res) => {
         },
       },
     });
-    console.log(dailyProgressItems);
+ 
 
     // Prepare the result object for weekly stats (carbs, protein, fats, calories_intake, calories_burned)
     const weeklyStats = {

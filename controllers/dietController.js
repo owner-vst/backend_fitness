@@ -416,7 +416,7 @@ export const fetchSuggestedDietPlan = async (req, res) => {
     const calories = await calculateCalories(req.userId);
     const goal = calories.goal;
     const calories_intake = calories.dailyCalories;
-    console.log(calories_intake);
+   
     const calories_burned = calories.caloriesToBurn;
     const planItems = await getDietPlanItems(req.userId, diet_planId);
     const formattedFoodItems = food_items.map((item) => ({
@@ -567,8 +567,7 @@ export const getOrCreateDietPlan = async (userId) => {
     const todayISOString = istToday.toISOString();
     const endOfDayISOString = endOfDay.toISOString();
 
-    console.log("todayISOString:", todayISOString); // Should reflect IST correctly
-    console.log("endOfDayISOString:", endOfDayISOString); // End of day in IST
+    
 
     // Check if there's an existing plan for the user today (in IST)
     const existingPlan = await prisma.dietPlan.findFirst({
@@ -713,7 +712,7 @@ export const calculateCalories = async (userId) => {
 
 export const getDietPlanItems = async (userId, planId) => {
   try {
-    console.log(userId, planId);
+  
     const planItems = await prisma.dietPlanItem.findMany({
       where: {
         user_id: userId,
@@ -735,7 +734,7 @@ export const createMultipleDietPlanItems = async (req, res) => {
     const parsedBody = createDietPlanItemSchema.parse(body);
 
     // Log parsed body to debug
-    console.log("Parsed body:", parsedBody);
+
 
     // Prepare data for the diet plan items
     const dietPlanItems = [
@@ -807,8 +806,7 @@ export const createMultipleDietPlanItemsHelper = async (
   diet_planId,
   userId
 ) => {
-  console.log("parsedBody", parsedBody);
-  console.log("diet_planId", diet_planId);
+  
   const dateToBeUpdated = await prisma.dietPlan.findFirst({
     where: {
       id: diet_planId,
@@ -817,7 +815,7 @@ export const createMultipleDietPlanItemsHelper = async (
       date: true,
     },
   });
-  console.log("dateToBeUpdated", dateToBeUpdated);
+ 
 
   try {
     // Fetch the existing diet plan items from the database for comparison
@@ -827,7 +825,7 @@ export const createMultipleDietPlanItemsHelper = async (
         user_id: parsedBody.user_id, // Filter based on user if necessary
       },
     });
-    console.log("existingDietPlans", existingDietPlans);
+ 
     // Extract existing meal types from the database
     const existingMealTypes = existingDietPlans.map((item) => item.meal_type);
 
@@ -856,7 +854,7 @@ export const createMultipleDietPlanItemsHelper = async (
       }
     }
 
-    console.log("dietPlanItems to be created:", dietPlanItems);
+ 
 
     // If there are missing diet plan items, insert them into the database
     if (dietPlanItems.length > 0) {
@@ -902,8 +900,7 @@ export const getOrCreateDailyProgress = async (userId) => {
     const todayISOString = istToday.toISOString();
     const endOfDayISOString = endOfDay.toISOString();
 
-    console.log("Start of today IST:", todayISOString); // Start of today in IST
-    console.log("End of today IST:", endOfDayISOString); // End of today in IST
+   
 
     // Check if there's an existing daily progress record for today
     const existingProgress = await prisma.dailyProgress.findFirst({

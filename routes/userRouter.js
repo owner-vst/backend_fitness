@@ -13,6 +13,8 @@ import {
   getUserWorkoutPlanItems,
   updateUserDietPlanItem,
   updateUserWorkoutPlanItems,
+  userDashboard,
+  vendorDashboard,
 } from "../controllers/userController.js";
 import { getWeeklyProgressStats } from "../controllers/DietStatsController.js";
 
@@ -67,4 +69,6 @@ userRouter.get("/get-food-catalogue", verifyToken, getFoodCatalogue);
 userRouter.post("/create-food-item", verifyToken, createFoodCatalogueUser);
 userRouter.get("/get-weekly-diet-stats", verifyToken, getWeeklyProgressStats);
 userRouter.get("/get-activities", verifyToken, getActivities);
+userRouter.get("/get-user-dashboard", verifyToken, userDashboard);
+userRouter.get("/get-vendor-dashboard", verifyToken, vendorDashboard);
 export default userRouter;

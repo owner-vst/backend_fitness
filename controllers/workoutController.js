@@ -342,7 +342,7 @@ export const fetchSuggestedWorkoutPlan = async (req, res) => {
     workout_planId = workout_planId.planId;
     const calories = await calculateCalories(req.userId);
     const goal = calories.goal;
-    console.log(calories);
+ 
     const calories_burned = calories.caloriesToBurn;
     const planItems = await getWorkoutPlanItems(req.userId, workout_planId);
     const formattedWorkoutItems = workout_items.map((item) => ({
@@ -608,7 +608,7 @@ export const calculateCalories = async (userId) => {
 
 export const getWorkoutPlanItems = async (userId, planId) => {
   try {
-    console.log(userId, planId);
+   
     const planItems = await prisma.workoutPlanItem.findMany({
       where: {
         user_id: userId,
@@ -626,8 +626,7 @@ export const createMultipleWorkoutPlanItemsHelper = async (
   workout_planId,
   userId
 ) => {
-  console.log("parsedBody", parsedBody);
-  console.log("workout_planId", workout_planId);
+
 
   // Fetch the date associated with the workout plan to be updated
   const dateToBeUpdated = await prisma.workoutPlan.findFirst({
@@ -638,7 +637,7 @@ export const createMultipleWorkoutPlanItemsHelper = async (
       date: true,
     },
   });
-  console.log("dateToBeUpdated", dateToBeUpdated);
+ 
 
   try {
     // Fetch the existing workout plan items for comparison
@@ -648,7 +647,7 @@ export const createMultipleWorkoutPlanItemsHelper = async (
         user_id: userId, // Filter by user_id to avoid duplicates
       },
     });
-    console.log("existingWorkoutPlans", existingWorkoutPlans);
+    
 
     // Extract existing activity IDs from the database
     const existingActivityIds = existingWorkoutPlans.map(
@@ -682,7 +681,7 @@ export const createMultipleWorkoutPlanItemsHelper = async (
     // Limit the number of items to create to 3
     const limitedWorkoutPlanItems = workoutPlanItems.slice(0, 3);
 
-    console.log("workoutPlanItems to be created:", limitedWorkoutPlanItems);
+    
 
     // If there are items to create, insert them into the database
     if (limitedWorkoutPlanItems.length > 0) {
