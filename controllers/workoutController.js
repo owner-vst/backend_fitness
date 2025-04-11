@@ -176,25 +176,39 @@ const workoutPlanItemSchema = z.object({
   duration: z.number().int(),
   status: z.enum(["PENDING", "COMPLETED", "SKIPPED"]),
   user_id: z.number().int(), // Added user_id
-  plan_type: z.enum(["AI", "USER"]), // Example plan_type, adjust as needed
-  date: z.string().datetime(), // Ensure the date is in a valid datetime format
-  created_by_id: z.number().int(), // Added created_by_id
+  plan_type: z.enum(["AI", "USER"]).optional(), // Example plan_type, adjust as needed
 });
 const UpdateWorkoutPlanItemSchema = z.object({
-  workout_plan_id: z.number().int().optional(), // Optional, as it's not required to update
   activity_id: z.number().int().optional(), // Optional, as it's not required to update
   duration: z.number().int().optional(), // Optional, as it's not required to update
   status: z.enum(["PENDING", "COMPLETED", "SKIPPED"]).optional(), // Optional, as it's not required to update
   user_id: z.number().int().optional(), // Optional, as it's not required to update
   plan_type: z.enum(["AI", "USER"]).optional(), // Optional, as it's not required to update
-  date: z.string().datetime().optional(), // Optional, as it's not required to update
-  created_by_id: z.number().int().optional(), // Optional, as created_by_id typically should not be updated
+
+  // Optional, as created_by_id typically should not be updated
 });
 
 export const createWorkoutPlanItem = async (req, res) => {
   try {
     // Validate the request body
     const parsedBody = workoutPlanItemSchema.parse(req.body);
+    const workoutPlan = await prisma.workoutPlan.findFirst({
+      where: {
+        id: parsedBody.workout_plan_id,
+        user_id: parsedBody.user_id,
+      },
+      select: {
+        date: true,
+      },
+    });
+
+    if (!workoutPlan) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "Workout Plan does not belong to the specified user or does not exist",
+      });
+    }
 
     // Create a new workout plan item
     const workoutPlanItem = await prisma.workoutPlanItem.create({
@@ -204,14 +218,15 @@ export const createWorkoutPlanItem = async (req, res) => {
         duration: parsedBody.duration,
         status: parsedBody.status,
         user_id: parsedBody.user_id, // Added user_id
-        plan_type: parsedBody.plan_type, // Added plan_type
-        date: parsedBody.date, // Added date
-        created_by_id: parsedBody.created_by_id, // Assuming user is authenticated and their ID is stored in `req.user.id`
+        plan_type: parsedBody.plan_type || "USER", // Added plan_type
+        date: workoutPlan.date, // Added date
+        created_by_id: req.userId, // Assuming user is authenticated and their ID is stored in `req.user.id`
       },
     });
 
     res.status(201).json({
       success: true,
+      message: "Workout Plan Item created successfully",
       workoutPlanItem,
     });
   } catch (error) {
@@ -221,83 +236,40 @@ export const createWorkoutPlanItem = async (req, res) => {
     });
   }
 };
-
-export const getWorkoutPlanItem = async (req, res) => {
-  const { id } = req.params; // Get the workout plan item ID from the URL params
-  try {
-    // Fetch the workout plan item by its ID
-    const workoutPlanItem = await prisma.workoutPlanItem.findUnique({
-      where: { id: parseInt(id) },
-      include: {
-        workout_plan: true, // Include workout plan details
-        activity: true, // Include activity details
-        user: true, // Include user details
-        created_by: true, // Include the user who created this item
-      },
-    });
-
-    if (!workoutPlanItem) {
-      return res.status(404).json({
-        success: false,
-        message: "Workout plan item not found",
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      workoutPlanItem,
-    });
-  } catch (error) {
-    res.status(400).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-export const getAllWorkoutPlanItems = async (req, res) => {
-  try {
-    // Fetch all workout plan items from the database
-    const workoutPlanItems = await prisma.workoutPlanItem.findMany({
-      include: {
-        workout_plan: true, // Include workout plan details
-        activity: true, // Include activity details
-        user: true, // Include user details
-        created_by: true, // Include the user who created this item
-      },
-    });
-
-    res.status(200).json({
-      success: true,
-      workoutPlanItems,
-    });
-  } catch (error) {
-    res.status(400).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
 export const updateWorkoutPlanItem = async (req, res) => {
   const { id } = req.params; // Get the workout plan item ID from the URL params
   try {
     // Validate the request body
     const parsedBody = UpdateWorkoutPlanItemSchema.parse(req.body);
+    const workoutPlan = await prisma.workoutPlan.findFirst({
+      where: {
+        id: parsedBody.workout_plan_id,
+        user_id: parsedBody.user_id,
+      },
+      select: {
+        date: true,
+      },
+    });
+
+    if (!workoutPlan) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "Workout Plan does not belong to the specified user or does not exist",
+      });
+    }
 
     // Update the workout plan item
     const updatedWorkoutPlanItem = await prisma.workoutPlanItem.update({
       where: { id: parseInt(id) },
       data: {
-        workout_plan_id: parsedBody.workout_plan_id,
         activity_id: parsedBody.activity_id,
         duration: parsedBody.duration,
         status: parsedBody.status,
         user_id: parsedBody.user_id, // Updated user_id
-        plan_type: parsedBody.plan_type, // Updated plan_type
-        date: parsedBody.date, // Updated date
-        created_by_id: parsedBody.created_by_id, // Assuming user is authenticated and their ID is stored in `req.user.id`
-        // created_by_id is not updated; it's immutable
+        plan_type: parsedBody.plan_type || "USER", // Updated plan_type
+        date: workoutPlan.date, // Updated date
+        created_by_id: req.userId,
       },
     });
 
@@ -334,6 +306,89 @@ export const deleteWorkoutPlanItem = async (req, res) => {
   }
 };
 
+export const getAllWorkoutPlanItems = async (req, res) => {
+  try {
+    // Fetch all workout plan items from the database
+    const rawItems = await prisma.workoutPlanItem.findMany({
+      select: {
+        id: true,
+        workout_plan_id: true,
+        activity_id: true,
+        status: true,
+        created_by_id: true,
+        plan_type: true,
+        duration: true,
+
+        user_id: true,
+        user: {
+          select: {
+            name: true,
+          },
+        },
+        activity: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    });
+    const workoutPlanItems = rawItems.map((item) => ({
+      id: item.id,
+      workout_plan_id: item.workout_plan_id,
+      activity_id: item.activity_id,
+      status: item.status,
+      created_by_id: item.created_by_id,
+      plan_type: item.plan_type,
+      duration: item.duration,
+      user_id: item.user_id,
+      user_name: item.user.name,
+      activity_name: item.activity.name,
+    }));
+
+    res.status(200).json({
+      success: true,
+      workoutPlanItems,
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+export const getWorkoutPlanItem = async (req, res) => {
+  const { id } = req.params; // Get the workout plan item ID from the URL params
+  try {
+    // Fetch the workout plan item by its ID
+    const workoutPlanItem = await prisma.workoutPlanItem.findUnique({
+      where: { id: parseInt(id) },
+      include: {
+        workout_plan: true, // Include workout plan details
+        activity: true, // Include activity details
+        user: true, // Include user details
+        created_by: true, // Include the user who created this item
+      },
+    });
+
+    if (!workoutPlanItem) {
+      return res.status(404).json({
+        success: false,
+        message: "Workout plan item not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      workoutPlanItem,
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 export const fetchSuggestedWorkoutPlan = async (req, res) => {
   try {
     const workout_items = await prisma.activity.findMany();
@@ -342,7 +397,7 @@ export const fetchSuggestedWorkoutPlan = async (req, res) => {
     workout_planId = workout_planId.planId;
     const calories = await calculateCalories(req.userId);
     const goal = calories.goal;
- 
+
     const calories_burned = calories.caloriesToBurn;
     const planItems = await getWorkoutPlanItems(req.userId, workout_planId);
     const formattedWorkoutItems = workout_items.map((item) => ({
@@ -608,7 +663,6 @@ export const calculateCalories = async (userId) => {
 
 export const getWorkoutPlanItems = async (userId, planId) => {
   try {
-   
     const planItems = await prisma.workoutPlanItem.findMany({
       where: {
         user_id: userId,
@@ -626,8 +680,6 @@ export const createMultipleWorkoutPlanItemsHelper = async (
   workout_planId,
   userId
 ) => {
-
-
   // Fetch the date associated with the workout plan to be updated
   const dateToBeUpdated = await prisma.workoutPlan.findFirst({
     where: {
@@ -637,7 +689,6 @@ export const createMultipleWorkoutPlanItemsHelper = async (
       date: true,
     },
   });
- 
 
   try {
     // Fetch the existing workout plan items for comparison
@@ -647,7 +698,6 @@ export const createMultipleWorkoutPlanItemsHelper = async (
         user_id: userId, // Filter by user_id to avoid duplicates
       },
     });
-    
 
     // Extract existing activity IDs from the database
     const existingActivityIds = existingWorkoutPlans.map(
@@ -680,8 +730,6 @@ export const createMultipleWorkoutPlanItemsHelper = async (
 
     // Limit the number of items to create to 3
     const limitedWorkoutPlanItems = workoutPlanItems.slice(0, 3);
-
-    
 
     // If there are items to create, insert them into the database
     if (limitedWorkoutPlanItems.length > 0) {

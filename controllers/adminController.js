@@ -385,3 +385,19 @@ export const adminDashboard = async (req, res) => {
     return res.status(400).json({ success: false, message: error.message });
   }
 };
+export const getUSerNameList = async (req, res) => {
+  try {
+    const userNameList = await prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+    return res.status(200).json({
+      success: true,
+      userNameList,
+    });
+  } catch (error) {
+    return res.status(400).json({ success: false, message: error.message });
+  }
+};

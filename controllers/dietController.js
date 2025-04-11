@@ -209,13 +209,53 @@ const createDietPlanItemSchema = z.object({
     "Invalid meal type"
   ),
   food_id: z.number().min(1, "Food ID is required"),
+  status: z.enum(["PENDING", "COMPLETED", "SKIPPED"]).optional(),
   quantity: z.number().min(0.1, "Quantity must be greater than zero"),
   user_id: z.number().min(1, "User ID is required"), // Added user_id
   plan_type: z.enum(["AI", "USER"]).optional(), // Added plan_type
-  date: z.string().datetime(), // Date as string in datetime format
-  created_by_id: z.number().min(1, "Created By ID is required"), // Added created_by_id
 });
 
+// export const createDietPlanItem = async (req, res) => {
+//   const { body } = req;
+
+//   try {
+//     // Validate request body using Zod
+//     const parsedBody = createDietPlanItemSchema.parse(body);
+//     const date = await prisma.dietPlan.findFirst({
+//       where: {
+//         id: parsedBody.diet_plan_id,
+//       },
+//       select: {
+//         date: true,
+//       },
+//     });
+
+//     // Create new DietPlanItem
+//     const dietPlanItem = await prisma.dietPlanItem.create({
+//       data: {
+//         diet_plan_id: parsedBody.diet_plan_id,
+//         meal_type: parsedBody.meal_type,
+//         food_id: parsedBody.food_id,
+//         quantity: parsedBody.quantity,
+//         user_id: parsedBody.user_id,
+//         plan_type: parsedBody.plan_type || "USER", // Default to "USER" if not provided
+//         date: date.date,
+//         created_by_id: req.userId,
+//       },
+//     });
+
+//     return res.status(201).json({
+//       success: true,
+//       message: "Diet Plan Item created successfully",
+//       dietPlanItem,
+//     });
+//   } catch (error) {
+//     return res.status(400).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
 export const createDietPlanItem = async (req, res) => {
   const { body } = req;
 
@@ -223,17 +263,37 @@ export const createDietPlanItem = async (req, res) => {
     // Validate request body using Zod
     const parsedBody = createDietPlanItemSchema.parse(body);
 
+    // Check that the diet plan exists and belongs to the given user_id
+    const dietPlan = await prisma.dietPlan.findFirst({
+      where: {
+        id: parsedBody.diet_plan_id,
+        user_id: parsedBody.user_id,
+      },
+      select: {
+        date: true,
+      },
+    });
+
+    if (!dietPlan) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "Diet Plan does not belong to the specified user or does not exist",
+      });
+    }
+
     // Create new DietPlanItem
     const dietPlanItem = await prisma.dietPlanItem.create({
       data: {
         diet_plan_id: parsedBody.diet_plan_id,
+        status: parsedBody.status,
         meal_type: parsedBody.meal_type,
         food_id: parsedBody.food_id,
         quantity: parsedBody.quantity,
         user_id: parsedBody.user_id,
-        plan_type: parsedBody.plan_type || "USER", // Default to "USER" if not provided
-        date: parsedBody.date,
-        created_by_id: parsedBody.created_by_id,
+        plan_type: parsedBody.plan_type || "USER",
+        date: dietPlan.date,
+        created_by_id: req.userId,
       },
     });
 
@@ -260,7 +320,7 @@ const updateDietPlanItemSchema = z.object({
   status: z.enum(["PENDING", "COMPLETED", "SKIPPED"]).optional(),
   user_id: z.number().min(1, "User ID is required").optional(),
   plan_type: z.enum(["AI", "USER"]).optional(),
-  date: z.string().datetime().optional(),
+
   created_by_id: z.number().min(1, "Created By ID is required").optional(),
 });
 
@@ -294,7 +354,7 @@ export const updateDietPlanItem = async (req, res) => {
         status: parsedBody.status || dietPlanItem.status,
         user_id: parsedBody.user_id || dietPlanItem.user_id,
         plan_type: parsedBody.plan_type || dietPlanItem.plan_type,
-        date: parsedBody.date || dietPlanItem.date,
+        date: dietPlanItem.date,
         created_by_id: parsedBody.created_by_id || dietPlanItem.created_by_id,
       },
     });
@@ -379,13 +439,44 @@ export const viewDietPlanItem = async (req, res) => {
 
 export const getAllDietPlanItems = async (req, res) => {
   try {
-    // Fetch all DietPlanItems
-    const dietPlanItems = await prisma.dietPlanItem.findMany({
-      include: {
-        food: true, // Include related food details
-        diet_plan: true, // Include related diet plan details
+    const rawItems = await prisma.dietPlanItem.findMany({
+      select: {
+        id: true,
+        diet_plan_id: true,
+        meal_type: true,
+        status: true,
+        created_by_id: true,
+        plan_type: true,
+        quantity: true,
+        food_id: true,
+        user_id: true,
+        user: {
+          select: {
+            name: true,
+          },
+        },
+        food: {
+          select: {
+            name: true,
+          },
+        },
       },
     });
+
+    // Flatten the food name to top-level
+    const dietPlanItems = rawItems.map((item) => ({
+      id: item.id,
+      diet_plan_id: item.diet_plan_id,
+      meal_type: item.meal_type,
+      status: item.status,
+      created_by_id: item.created_by_id,
+      plan_type: item.plan_type,
+      quantity: item.quantity,
+      food_id: item.food_id,
+      food_name: item.food.name,
+      user_id: item.user_id,
+      user_name: item.user.name,
+    }));
 
     return res.status(200).json({
       success: true,
@@ -416,7 +507,7 @@ export const fetchSuggestedDietPlan = async (req, res) => {
     const calories = await calculateCalories(req.userId);
     const goal = calories.goal;
     const calories_intake = calories.dailyCalories;
-   
+
     const calories_burned = calories.caloriesToBurn;
     const planItems = await getDietPlanItems(req.userId, diet_planId);
     const formattedFoodItems = food_items.map((item) => ({
@@ -567,8 +658,6 @@ export const getOrCreateDietPlan = async (userId) => {
     const todayISOString = istToday.toISOString();
     const endOfDayISOString = endOfDay.toISOString();
 
-    
-
     // Check if there's an existing plan for the user today (in IST)
     const existingPlan = await prisma.dietPlan.findFirst({
       where: {
@@ -712,7 +801,6 @@ export const calculateCalories = async (userId) => {
 
 export const getDietPlanItems = async (userId, planId) => {
   try {
-  
     const planItems = await prisma.dietPlanItem.findMany({
       where: {
         user_id: userId,
@@ -734,7 +822,6 @@ export const createMultipleDietPlanItems = async (req, res) => {
     const parsedBody = createDietPlanItemSchema.parse(body);
 
     // Log parsed body to debug
-
 
     // Prepare data for the diet plan items
     const dietPlanItems = [
@@ -806,7 +893,6 @@ export const createMultipleDietPlanItemsHelper = async (
   diet_planId,
   userId
 ) => {
-  
   const dateToBeUpdated = await prisma.dietPlan.findFirst({
     where: {
       id: diet_planId,
@@ -815,7 +901,6 @@ export const createMultipleDietPlanItemsHelper = async (
       date: true,
     },
   });
- 
 
   try {
     // Fetch the existing diet plan items from the database for comparison
@@ -825,7 +910,7 @@ export const createMultipleDietPlanItemsHelper = async (
         user_id: parsedBody.user_id, // Filter based on user if necessary
       },
     });
- 
+
     // Extract existing meal types from the database
     const existingMealTypes = existingDietPlans.map((item) => item.meal_type);
 
@@ -853,8 +938,6 @@ export const createMultipleDietPlanItemsHelper = async (
         dietPlanItems.push(newItem);
       }
     }
-
- 
 
     // If there are missing diet plan items, insert them into the database
     if (dietPlanItems.length > 0) {
@@ -899,8 +982,6 @@ export const getOrCreateDailyProgress = async (userId) => {
     // Convert both dates to ISO string format to ensure IST handling
     const todayISOString = istToday.toISOString();
     const endOfDayISOString = endOfDay.toISOString();
-
-   
 
     // Check if there's an existing daily progress record for today
     const existingProgress = await prisma.dailyProgress.findFirst({

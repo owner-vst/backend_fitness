@@ -5,6 +5,7 @@ import {
   createUsers,
   deleteUser,
   getUserById,
+  getUSerNameList,
   getUsers,
   modifyUser,
 } from "../controllers/adminController.js";
@@ -373,4 +374,6 @@ adminRouter.delete(
 );
 //dashboard
 adminRouter.get("/admin-dashboard", verifyToken, adminDashboard);
+
+adminRouter.get("/get-user-name-list", verifyToken, getUSerNameList);
 export default adminRouter;
