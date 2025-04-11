@@ -170,7 +170,6 @@ export const updateUserWorkoutPlanItems = async (req, res) => {
         activity: true, // To get the activity data (calories_per_kg)
       },
     });
-   
 
     if (!workoutPlanItem) {
       return res
@@ -613,7 +612,7 @@ export const updateUserDietPlanItem = async (req, res) => {
     }
 
     // Normalize dietPlanItem date to IST and set it to midnight
-    
+
     // Check if the date matches today (ignoring time)
     if (dietPlanItem.date.toISOString() !== todayISOString) {
       return res.status(404).json({

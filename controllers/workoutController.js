@@ -382,7 +382,7 @@ export const updateWorkoutPlanItem = async (req, res) => {
       dailyProgress = await prisma.dailyProgress.create({
         data: {
           user_id: parsedBody.user_id,
-          date: planDate.toISOString(),
+          date: workoutPlan.date,
           calories_burned: parsedBody.status === "COMPLETED" ? newCalories : 0,
         },
       });

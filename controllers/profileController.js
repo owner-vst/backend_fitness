@@ -203,7 +203,7 @@ export const getUserProfile = async (req, res) => {
         success: true,
         message: "User profile not found",
         profile: null,
-        user:user
+        user: user,
       });
     }
 
@@ -218,6 +218,42 @@ export const getUserProfile = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "An error occurred while retrieving user profile",
+    });
+  }
+};
+
+export const uploadProfilePicture = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    const { profilePic } = req.body;
+
+    if (!profilePic) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Profile picture URL is required." });
+    }
+
+    // Update user's profilePic field in the User table
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { profilePic },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Profile picture updated successfully.",
+      profilePic: updatedUser.profilePic,
+    });
+  } catch (error) {
+    console.error("Error updating profile picture:", error);
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while updating profile picture.",
     });
   }
 };

@@ -16,13 +16,11 @@ export const VERIFICATION_EMAIL_TEMPLATE = `
     <div style="text-align: center; margin: 30px 0;">
       <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #4CAF50;">{verificationCode}</span>
     </div>  
-    <div style="text-align: center; margin: 30px 0;"> Or Else CLick this link to verify your email <a href="{verificationUrl}">Click Here</a> </div>
-      <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #4CAF50;"></span>
-    </div>
+   
     <p>Enter this code on the verification page to complete your registration.</p>
     <p>This code will expire in 15 minutes for security reasons.</p>
     <p>If you didn't create an account with us, please ignore this email.</p>
-    <p>Best regards,<br>Your App Team</p>
+    <p>Best regards,<br>Your Insightstracker Team</p>
   </div>
   <div style="text-align: center; margin-top: 20px; color: #888; font-size: 0.8em;">
     <p>This is an automated message, please do not reply to this email.</p>
@@ -59,7 +57,7 @@ export const PASSWORD_RESET_SUCCESS_TEMPLATE = `
       <li>Avoid using the same password across multiple sites</li>
     </ul>
     <p>Thank you for helping us keep your account secure.</p>
-    <p>Best regards,<br>Your App Team</p>
+    <p>Best regards,<br>Your Insightstracker Team</p>
   </div>
   <div style="text-align: center; margin-top: 20px; color: #888; font-size: 0.8em;">
     <p>This is an automated message, please do not reply to this email.</p>
@@ -83,12 +81,12 @@ export const PASSWORD_RESET_REQUEST_TEMPLATE = `
   <div style="background-color: #f9f9f9; padding: 20px; border-radius: 0 0 5px 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
     <p>Hello,</p>
     <p>We received a request to reset your password. If you didn't make this request, please ignore this email.</p>
-    <p>To reset your password, click the button below:</p>
+   
     <div style="text-align: center; margin: 30px 0;">
       <span style="background-color: #4CAF50; color: white; padding: 12px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">{resetToken}</span>
     </div>
     <p>This link will expire in 1 hour for security reasons.</p>
-    <p>Best regards,<br>Your App Team</p>
+    <p>Best regards,<br>Your Insightstracker Team</p>
   </div>
   <div style="text-align: center; margin-top: 20px; color: #888; font-size: 0.8em;">
     <p>This is an automated message, please do not reply to this email.</p>
@@ -103,23 +101,23 @@ export const VERIFICATION_EMAIL_OTP_TEMPLATE = `
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Verify Your Email</title>
+  <title>Verify Code</title>
 </head>
 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
   <div style="background: linear-gradient(to right, #4CAF50, #45a049); padding: 20px; text-align: center;">
-    <h1 style="color: white; margin: 0;">Verify Your Email</h1>
+    <h1 style="color: white; margin: 0;">Verification Code</h1>
   </div>
   <div style="background-color: #f9f9f9; padding: 20px; border-radius: 0 0 5px 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
     <p>Hello,</p>
-    <p>Thank you for signing up! Your verification code is:</p>
+    <p>Thank you for  sign in! Your verification code is:</p>
     <div style="text-align: center; margin: 30px 0;">
       <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #4CAF50;">{otp}</span>
     </div>  
     
-    <p>Enter this code on the verification page to complete your registration.</p>
+    <p>Enter this code on the verification page to complete your login.</p>
     <p>This code will expire in 15 minutes for security reasons.</p>
-    <p>If you didn't create an account with us, please ignore this email.</p>
-    <p>Best regards,<br>Your App Team</p>
+   
+    <p>Best regards,<br>Your insightstracker Team</p>
   </div>
   <div style="text-align: center; margin-top: 20px; color: #888; font-size: 0.8em;">
     <p>This is an automated message, please do not reply to this email.</p>

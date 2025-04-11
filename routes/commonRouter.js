@@ -11,6 +11,7 @@ import {
 import {
   getUserProfile,
   updateUserProfile,
+  uploadProfilePicture,
 } from "../controllers/profileController.js";
 import {
   calculateCalories,
@@ -42,6 +43,7 @@ commonRouter.get("/unread-messages-count", verifyToken, unreadMessagesCount);
 commonRouter.get("/get-last-message", verifyToken, getLastMessages);
 
 commonRouter.post("/update-profile", verifyToken, updateUserProfile);
+commonRouter.post("/upload-profile-picture", verifyToken, uploadProfilePicture);
 commonRouter.get("/get-profile", verifyToken, getUserProfile);
 
 commonRouter.get("/suggest-diet-plan", verifyToken, fetchSuggestedDietPlan);

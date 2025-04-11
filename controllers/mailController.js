@@ -20,16 +20,14 @@ const transporter = nodemailer.createTransport({
 const sender = "no-reply@yourdomain.com"; // Replace with your sender email
 
 export const sendVerificationEmail = async (email, verificationToken) => {
-  const verificationUrl = `${process.env.CLIENT_URL}/auth/verify?token=${verificationToken}&email=${email}`;
+  // const verificationUrl = `${process.env.CLIENT_URL}/auth/verify?token=${verificationToken}&email=${email}`;
   const message = {
     from: sender,
     to: email,
     subject: "Verify your email",
     html: VERIFICATION_EMAIL_TEMPLATE.replace(
       "{verificationCode}",
-      verificationToken,
-      "{verificationUrl}",
-      verificationUrl
+      verificationToken
     ),
   };
 
