@@ -7,7 +7,6 @@ export const createActivitySchema = z.object({
   calories_per_kg: z
     .number()
     .min(0, "Calories per kg must be a positive number"), // Positive value for calories
-  user_id: z.number().optional(), // Optional, in case the activity isn't associated with a specific user
 });
 
 export const createActivity = async (req, res) => {
@@ -42,7 +41,7 @@ export const createActivity = async (req, res) => {
         name: parsedBody.name,
         duration: parsedBody.duration, // Duration in hours (e.g., 1 hour)
         calories_per_kg: parsedBody.calories_per_kg, // Calories burned per kg per hour
-        user_id: parsedBody.user_id || null, // Optional user, can be null
+        user_id: req.userId, // Optional user, can be null
       },
     });
 
@@ -236,59 +235,289 @@ export const createWorkoutPlanItem = async (req, res) => {
     });
   }
 };
+// export const updateWorkoutPlanItem = async (req, res) => {
+//   const { id } = req.params; // Get the workout plan item ID from the URL params
+//   try {
+//     // Validate the request body
+//     const parsedBody = UpdateWorkoutPlanItemSchema.parse(req.body);
+//     const workoutPlan = await prisma.workoutPlan.findFirst({
+//       where: {
+//         id: parsedBody.workout_plan_id,
+//         user_id: parsedBody.user_id,
+//       },
+//       select: {
+//         date: true,
+//       },
+//     });
+
+//     if (!workoutPlan) {
+//       return res.status(403).json({
+//         success: false,
+//         message:
+//           "Workout Plan does not belong to the specified user or does not exist",
+//       });
+//     }
+
+//     // Update the workout plan item
+//     const updatedWorkoutPlanItem = await prisma.workoutPlanItem.update({
+//       where: { id: parseInt(id) },
+//       data: {
+//         activity_id: parsedBody.activity_id,
+//         duration: parsedBody.duration,
+//         status: parsedBody.status,
+//         user_id: parsedBody.user_id, // Updated user_id
+//         plan_type: parsedBody.plan_type || "USER", // Updated plan_type
+//         date: workoutPlan.date, // Updated date
+//         created_by_id: req.userId,
+//       },
+//     });
+
+//     res.status(200).json({
+//       success: true,
+//       updatedWorkoutPlanItem,
+//     });
+//   } catch (error) {
+//     res.status(400).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
 export const updateWorkoutPlanItem = async (req, res) => {
-  const { id } = req.params; // Get the workout plan item ID from the URL params
+  const { id } = req.params;
+
+  const workoutPlanId = req.body.workout_plan_id;
+  console.log("workout plan id", workoutPlanId);
+
   try {
-    // Validate the request body
     const parsedBody = UpdateWorkoutPlanItemSchema.parse(req.body);
+    console.log("parsed body", parsedBody);
+
+    // Fetch the plan to get its date
     const workoutPlan = await prisma.workoutPlan.findFirst({
       where: {
-        id: parsedBody.workout_plan_id,
+        id: workoutPlanId,
         user_id: parsedBody.user_id,
       },
-      select: {
-        date: true,
-      },
+      select: { date: true },
     });
 
     if (!workoutPlan) {
       return res.status(403).json({
         success: false,
-        message:
-          "Workout Plan does not belong to the specified user or does not exist",
+        message: "Workout Plan not found or does not belong to the user",
+      });
+    }
+    console.log("workout plan", workoutPlan);
+    // Get the old workout item (with activity)
+    const oldWorkoutItem = await prisma.workoutPlanItem.findUnique({
+      where: { id: parseInt(id) },
+      include: { activity: true },
+    });
+
+    if (!oldWorkoutItem) {
+      return res.status(404).json({
+        success: false,
+        message: "Workout item not found",
       });
     }
 
-    // Update the workout plan item
+    // Update workout item
     const updatedWorkoutPlanItem = await prisma.workoutPlanItem.update({
       where: { id: parseInt(id) },
       data: {
         activity_id: parsedBody.activity_id,
         duration: parsedBody.duration,
         status: parsedBody.status,
-        user_id: parsedBody.user_id, // Updated user_id
-        plan_type: parsedBody.plan_type || "USER", // Updated plan_type
-        date: workoutPlan.date, // Updated date
+        user_id: parsedBody.user_id,
+        plan_type: parsedBody.plan_type || "USER",
+        date: workoutPlan.date,
         created_by_id: req.userId,
       },
+      include: { activity: true },
     });
+
+    // Get user weight
+    const userProfile = await prisma.userProfile.findUnique({
+      where: { user_id: parsedBody.user_id },
+      select: { weight: true },
+    });
+
+    if (!userProfile) {
+      return res.status(404).json({
+        success: false,
+        message: "User profile not found",
+      });
+    }
+
+    const weight = userProfile.weight;
+
+    // New calories (if status is completed)
+    const newCaloriesPerMin =
+      updatedWorkoutPlanItem.activity.calories_per_kg /
+      updatedWorkoutPlanItem.activity.duration;
+
+    const newCalories = weight * newCaloriesPerMin * parsedBody.duration;
+
+    // Old calories (if status was completed)
+    let oldCalories = 0;
+    if (oldWorkoutItem.status === "COMPLETED") {
+      const oldPerMin =
+        oldWorkoutItem.activity.calories_per_kg /
+        oldWorkoutItem.activity.duration;
+      oldCalories = weight * oldPerMin * oldWorkoutItem.duration;
+    }
+
+    // Get or create daily progress
+
+    let dailyProgress = await prisma.dailyProgress.findFirst({
+      where: {
+        user_id: oldWorkoutItem.user_id,
+        date: workoutPlan.date,
+      },
+    });
+    console.log("old one", dailyProgress);
+
+    if (!dailyProgress) {
+      dailyProgress = await prisma.dailyProgress.create({
+        data: {
+          user_id: parsedBody.user_id,
+          date: planDate.toISOString(),
+          calories_burned: parsedBody.status === "COMPLETED" ? newCalories : 0,
+        },
+      });
+    } else {
+      let caloriesDiff = 0;
+
+      if (parsedBody.status === "COMPLETED") {
+        if (oldWorkoutItem.status === "COMPLETED") {
+          caloriesDiff = newCalories - oldCalories;
+        } else {
+          caloriesDiff = newCalories;
+        }
+      } else if (
+        parsedBody.status === "PENDING" &&
+        oldWorkoutItem.status === "COMPLETED"
+      ) {
+        caloriesDiff = -oldCalories;
+      }
+
+      await prisma.dailyProgress.update({
+        where: {
+          user_id_date: {
+            user_id: oldWorkoutItem.user_id,
+            date: workoutPlan.date,
+          },
+        },
+        data: {
+          calories_burned: {
+            increment: caloriesDiff,
+          },
+        },
+      });
+    }
 
     res.status(200).json({
       success: true,
       updatedWorkoutPlanItem,
     });
   } catch (error) {
+    console.error(error);
     res.status(400).json({
       success: false,
-      message: error.message,
+      message: error.message || "Something went wrong",
     });
   }
 };
 
+// export const deleteWorkoutPlanItem = async (req, res) => {
+//   const { id } = req.params; // Get the workout plan item ID from the URL params
+//   try {
+//     // Delete the workout plan item
+//     const deletedWorkoutPlanItem = await prisma.workoutPlanItem.delete({
+//       where: { id: parseInt(id) },
+//     });
+
+//     res.status(200).json({
+//       success: true,
+//       message: "Workout plan item deleted successfully",
+//       deletedWorkoutPlanItem,
+//     });
+//   } catch (error) {
+//     res.status(400).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
 export const deleteWorkoutPlanItem = async (req, res) => {
-  const { id } = req.params; // Get the workout plan item ID from the URL params
+  const { id } = req.params;
+
   try {
-    // Delete the workout plan item
+    // Fetch the workout plan item along with its activity
+    const workoutPlanItem = await prisma.workoutPlanItem.findUnique({
+      where: { id: parseInt(id) },
+      include: { activity: true },
+    });
+
+    if (!workoutPlanItem) {
+      return res.status(404).json({
+        success: false,
+        message: "Workout plan item not found",
+      });
+    }
+
+    // Only adjust daily progress if item was completed
+    if (workoutPlanItem.status === "COMPLETED") {
+      const userProfile = await prisma.userProfile.findUnique({
+        where: { user_id: workoutPlanItem.user_id },
+        select: { weight: true },
+      });
+
+      if (!userProfile) {
+        return res.status(404).json({
+          success: false,
+          message: "User profile not found",
+        });
+      }
+
+      const weight = userProfile.weight;
+
+      const caloriesPerMin =
+        workoutPlanItem.activity.calories_per_kg /
+        workoutPlanItem.activity.duration;
+
+      const caloriesBurned = weight * caloriesPerMin * workoutPlanItem.duration;
+
+      // Update daily progress if it exists
+      const progressDate = new Date(workoutPlanItem.date);
+      progressDate.setUTCHours(0, 0, 0, 0);
+
+      const dailyProgress = await prisma.dailyProgress.findFirst({
+        where: {
+          user_id: workoutPlanItem.user_id,
+          date: progressDate,
+        },
+      });
+
+      if (dailyProgress) {
+        await prisma.dailyProgress.update({
+          where: {
+            user_id_date: {
+              user_id: workoutPlanItem.user_id,
+              date: progressDate,
+            },
+          },
+          data: {
+            calories_burned: {
+              decrement: caloriesBurned,
+            },
+          },
+        });
+      }
+    }
+
+    // Finally, delete the workout plan item
     const deletedWorkoutPlanItem = await prisma.workoutPlanItem.delete({
       where: { id: parseInt(id) },
     });
@@ -299,9 +528,10 @@ export const deleteWorkoutPlanItem = async (req, res) => {
       deletedWorkoutPlanItem,
     });
   } catch (error) {
+    console.error(error);
     res.status(400).json({
       success: false,
-      message: error.message,
+      message: error.message || "Something went wrong",
     });
   }
 };

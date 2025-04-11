@@ -324,38 +324,180 @@ const updateDietPlanItemSchema = z.object({
   created_by_id: z.number().min(1, "Created By ID is required").optional(),
 });
 
+// export const updateDietPlanItem = async (req, res) => {
+//   const { id } = req.params;
+//   const { body } = req;
+//   console.log(req.body.diet_plan_id);
+
+//   try {
+//     // Validate request body using Zod
+//     const parsedBody = updateDietPlanItemSchema.parse(body);
+
+//     // Find the DietPlanItem by ID
+//     const dietPlanItem = await prisma.dietPlanItem.findUnique({
+//       where: { id: parseInt(id) },
+//     });
+
+//     if (!dietPlanItem) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Diet Plan Item not found",
+//       });
+//     }
+
+//     // Update the DietPlanItem
+//     const updatedDietPlanItem = await prisma.dietPlanItem.update({
+//       where: { id: parseInt(id) },
+//       data: {
+//         meal_type: parsedBody.meal_type || dietPlanItem.meal_type,
+//         food_id: parsedBody.food_id || dietPlanItem.food_id,
+//         quantity: parsedBody.quantity || dietPlanItem.quantity,
+//         status: parsedBody.status || dietPlanItem.status,
+//         user_id: parsedBody.user_id || dietPlanItem.user_id,
+//         plan_type: parsedBody.plan_type || dietPlanItem.plan_type,
+//         date: dietPlanItem.date,
+//         created_by_id: parsedBody.created_by_id || dietPlanItem.created_by_id,
+//       },
+//     });
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "Diet Plan Item updated successfully",
+//       dietPlanItem: updatedDietPlanItem,
+//     });
+//   } catch (error) {
+//     return res.status(400).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
 export const updateDietPlanItem = async (req, res) => {
   const { id } = req.params;
   const { body } = req;
 
   try {
-    // Validate request body using Zod
     const parsedBody = updateDietPlanItemSchema.parse(body);
 
-    // Find the DietPlanItem by ID
-    const dietPlanItem = await prisma.dietPlanItem.findUnique({
+    // Get the existing diet plan item
+    const oldDietPlanItem = await prisma.dietPlanItem.findUnique({
       where: { id: parseInt(id) },
+      include: { food: true },
     });
 
-    if (!dietPlanItem) {
+    if (!oldDietPlanItem) {
       return res.status(404).json({
         success: false,
         message: "Diet Plan Item not found",
       });
     }
 
-    // Update the DietPlanItem
+    const food = oldDietPlanItem.food;
+
+    // Calculate per gram macros
+    const caloriesPerGram = food.calories / food.serving_size_gm;
+    const proteinPerGram = food.protein / food.serving_size_gm;
+    const carbsPerGram = food.carbs / food.serving_size_gm;
+    const fatsPerGram = food.fats / food.serving_size_gm;
+
+    // New quantity and macro values
+    const newQuantity = parsedBody.quantity || oldDietPlanItem.quantity;
+    const newCalories = caloriesPerGram * newQuantity;
+    const newProtein = proteinPerGram * newQuantity;
+    const newCarbs = carbsPerGram * newQuantity;
+    const newFats = fatsPerGram * newQuantity;
+
+    // Old values (if completed)
+    let oldCalories = 0,
+      oldProtein = 0,
+      oldCarbs = 0,
+      oldFats = 0;
+
+    if (oldDietPlanItem.status === "COMPLETED") {
+      oldCalories = caloriesPerGram * oldDietPlanItem.quantity;
+      oldProtein = proteinPerGram * oldDietPlanItem.quantity;
+      oldCarbs = carbsPerGram * oldDietPlanItem.quantity;
+      oldFats = fatsPerGram * oldDietPlanItem.quantity;
+    }
+
+    // Update or create daily progress
+    let dailyProgress = await prisma.dailyProgress.findUnique({
+      where: {
+        user_id_date: {
+          user_id: parsedBody.user_id,
+          date: oldDietPlanItem.date.toISOString(),
+        },
+      },
+    });
+
+    if (!dailyProgress) {
+      dailyProgress = await prisma.dailyProgress.create({
+        data: {
+          user_id: parsedBody.user_id,
+          date: oldDietPlanItem.date.toISOString(),
+          calories_intake: parsedBody.status === "COMPLETED" ? newCalories : 0,
+          protein_intake: parsedBody.status === "COMPLETED" ? newProtein : 0,
+          carbs_intake: parsedBody.status === "COMPLETED" ? newCarbs : 0,
+          fats_intake: parsedBody.status === "COMPLETED" ? newFats : 0,
+        },
+      });
+    } else {
+      let caloriesDiff = 0,
+        proteinDiff = 0,
+        carbsDiff = 0,
+        fatsDiff = 0;
+
+      if (parsedBody.status === "COMPLETED") {
+        if (oldDietPlanItem.status === "COMPLETED") {
+          caloriesDiff = newCalories - oldCalories;
+          proteinDiff = newProtein - oldProtein;
+          carbsDiff = newCarbs - oldCarbs;
+          fatsDiff = newFats - oldFats;
+        } else {
+          caloriesDiff = newCalories;
+          proteinDiff = newProtein;
+          carbsDiff = newCarbs;
+          fatsDiff = newFats;
+        }
+      } else if (
+        parsedBody.status === "PENDING" &&
+        oldDietPlanItem.status === "COMPLETED"
+      ) {
+        caloriesDiff = -oldCalories;
+        proteinDiff = -oldProtein;
+        carbsDiff = -oldCarbs;
+        fatsDiff = -oldFats;
+      }
+
+      await prisma.dailyProgress.update({
+        where: {
+          user_id_date: {
+            user_id: parsedBody.user_id,
+            date: oldDietPlanItem.date.toISOString(),
+          },
+        },
+        data: {
+          calories_intake: { increment: caloriesDiff },
+          protein_intake: { increment: proteinDiff },
+          carbs_intake: { increment: carbsDiff },
+          fats_intake: { increment: fatsDiff },
+        },
+      });
+    }
+
+    // Update the diet plan item
     const updatedDietPlanItem = await prisma.dietPlanItem.update({
       where: { id: parseInt(id) },
       data: {
-        meal_type: parsedBody.meal_type || dietPlanItem.meal_type,
-        food_id: parsedBody.food_id || dietPlanItem.food_id,
-        quantity: parsedBody.quantity || dietPlanItem.quantity,
-        status: parsedBody.status || dietPlanItem.status,
-        user_id: parsedBody.user_id || dietPlanItem.user_id,
-        plan_type: parsedBody.plan_type || dietPlanItem.plan_type,
-        date: dietPlanItem.date,
-        created_by_id: parsedBody.created_by_id || dietPlanItem.created_by_id,
+        meal_type: parsedBody.meal_type || oldDietPlanItem.meal_type,
+        food_id: parsedBody.food_id || oldDietPlanItem.food_id,
+        quantity: newQuantity,
+        status: parsedBody.status || oldDietPlanItem.status,
+        user_id: parsedBody.user_id || oldDietPlanItem.user_id,
+        plan_type: parsedBody.plan_type || oldDietPlanItem.plan_type,
+        date: oldDietPlanItem.date,
+        created_by_id:
+          parsedBody.created_by_id || oldDietPlanItem.created_by_id,
       },
     });
 
@@ -365,20 +507,54 @@ export const updateDietPlanItem = async (req, res) => {
       dietPlanItem: updatedDietPlanItem,
     });
   } catch (error) {
+    console.error("Update Diet Plan Item Error:", error);
     return res.status(400).json({
       success: false,
-      message: error.message,
+      message: error.message || "Something went wrong",
     });
   }
 };
 
+// export const deleteDietPlanItem = async (req, res) => {
+//   const { id } = req.params;
+
+//   try {
+//     // Find the DietPlanItem by ID
+//     const dietPlanItem = await prisma.dietPlanItem.findUnique({
+//       where: { id: parseInt(id) },
+//     });
+
+//     if (!dietPlanItem) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Diet Plan Item not found",
+//       });
+//     }
+
+//     // Delete the DietPlanItem
+//     await prisma.dietPlanItem.delete({
+//       where: { id: parseInt(id) },
+//     });
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "Diet Plan Item deleted successfully",
+//     });
+//   } catch (error) {
+//     return res.status(400).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
 export const deleteDietPlanItem = async (req, res) => {
   const { id } = req.params;
 
   try {
-    // Find the DietPlanItem by ID
+    // Find the DietPlanItem by ID and include the food data
     const dietPlanItem = await prisma.dietPlanItem.findUnique({
       where: { id: parseInt(id) },
+      include: { food: true }, // Ensure that food data is included
     });
 
     if (!dietPlanItem) {
@@ -386,6 +562,60 @@ export const deleteDietPlanItem = async (req, res) => {
         success: false,
         message: "Diet Plan Item not found",
       });
+    }
+
+    // Check if the Diet Plan Item has a status of "COMPLETED"
+    if (dietPlanItem.status === "COMPLETED") {
+      // If it's completed, we need to adjust the daily progress
+      const dailyProgress = await prisma.dailyProgress.findUnique({
+        where: {
+          user_id_date: {
+            user_id: dietPlanItem.user_id,
+            date: dietPlanItem.date.toISOString(), // Assuming the date is stored and needs adjustment based on the date
+          },
+        },
+      });
+
+      if (dailyProgress) {
+        // Check if the food data exists and is valid before calculating
+        if (!dietPlanItem.food) {
+          return res.status(400).json({
+            success: false,
+            message: "Food data not found for the Diet Plan Item",
+          });
+        }
+
+        // Calculate consumed values based on quantity and food data
+        const caloriesPerGram =
+          dietPlanItem.food.calories / dietPlanItem.food.serving_size_gm;
+        const proteinPerGram =
+          dietPlanItem.food.protein / dietPlanItem.food.serving_size_gm;
+        const carbsPerGram =
+          dietPlanItem.food.carbs / dietPlanItem.food.serving_size_gm;
+        const fatsPerGram =
+          dietPlanItem.food.fats / dietPlanItem.food.serving_size_gm;
+
+        const caloriesConsumed = caloriesPerGram * dietPlanItem.quantity;
+        const proteinConsumed = proteinPerGram * dietPlanItem.quantity;
+        const carbsConsumed = carbsPerGram * dietPlanItem.quantity;
+        const fatsConsumed = fatsPerGram * dietPlanItem.quantity;
+
+        // Update the daily progress by subtracting the values
+        await prisma.dailyProgress.update({
+          where: {
+            user_id_date: {
+              user_id: dietPlanItem.user_id,
+              date: dietPlanItem.date.toISOString(),
+            },
+          },
+          data: {
+            calories_intake: { decrement: caloriesConsumed },
+            protein_intake: { decrement: proteinConsumed },
+            carbs_intake: { decrement: carbsConsumed },
+            fats_intake: { decrement: fatsConsumed },
+          },
+        });
+      }
     }
 
     // Delete the DietPlanItem
@@ -398,9 +628,10 @@ export const deleteDietPlanItem = async (req, res) => {
       message: "Diet Plan Item deleted successfully",
     });
   } catch (error) {
+    console.error("Delete Diet Plan Item Error:", error);
     return res.status(400).json({
       success: false,
-      message: error.message,
+      message: error.message || "Something went wrong",
     });
   }
 };
