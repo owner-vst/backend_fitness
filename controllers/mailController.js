@@ -115,7 +115,7 @@ export const sendUserCreatedEMail = async (email, password) => {
     from: sender,
     to: email,
     subject: "Your account created for Insightstracker",
-    html: `<p>Your password is ${password}. It will expire in 5 minutes.</p>`,
+    html: `<p>Your password is ${password} It will expire in 5 minutes.</p>`,
   };
 
   try {

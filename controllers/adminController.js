@@ -18,7 +18,7 @@ const signupSchemaAdmin = z.object({
   }), // Validate date format
   //phone: z.string().min(10).max(15), // Validate phone length
 
-  profilePic: z.string().url(),
+  profilePic: z.string().url().optional(),
   role_name: z.enum(["USER", "ADMIN", "VENDOR"]), // Role validation (can be extended based on your needs)
 });
 
@@ -75,6 +75,7 @@ export const createUsers = async (req, res) => {
         verificationTokenExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
         profilePic: parsedBody.profilePic || "", // Optional, if not provided, use empty string
         role_id: role.id, // Associate user with role using role ID
+        isVerified: true,
 
         status: "ACTIVE", // Set default verified status to false
       },
@@ -83,7 +84,7 @@ export const createUsers = async (req, res) => {
     // jwt
     //generateTokenAndSetCookie(res, user.id);
     await sendUserCreatedEMail(user.email, password);
-    await sendVerificationEmail(user.email, verificationToken);
+    //await sendVerificationEmail(user.email, verificationToken);
 
     res.status(201).json({
       success: true,
@@ -216,18 +217,32 @@ export const getUsers = async (req, res) => {
             role_name: true,
           },
         },
+        status: true,
       },
     });
+
     if (users.length === 0) {
       return res.status(404).json({
         success: false,
         message: "No users found",
       });
     }
-    return res.status(200).json({
-      success: true,
-      users,
+    const formattedData = users.map((user) => {
+      return {
+        id: user.id,
+
+        email: user.email,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        gender: user.gender,
+        dob: user.dob.toISOString().split("T")[0],
+        profilePic: user.profilePic,
+        role: user.role.role_name,
+        status: user.status,
+      };
     });
+
+    return res.status(200).json({ success: true, users: formattedData });
   } catch (error) {
     return res.status(400).json({ success: false, message: error.message });
   }
