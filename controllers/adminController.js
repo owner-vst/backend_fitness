@@ -416,3 +416,24 @@ export const getUSerNameList = async (req, res) => {
     return res.status(400).json({ success: false, message: error.message });
   }
 };
+
+export const getVendorsAdminList = async (req, res) => {
+  try {
+    const vendors = await prisma.user.findMany({
+      where: {
+        role: { role_name: "VENDOR" }, or : [{role: {role_name: "ADMIN"}}]
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      vendors,
+    });
+  } catch (error) {
+    return res.status(400).json({ success: false, message: error.message });
+  }
+};

@@ -7,6 +7,7 @@ import {
   getUserById,
   getUSerNameList,
   getUsers,
+  getVendorsAdminList,
   modifyUser,
 } from "../controllers/adminController.js";
 import {
@@ -376,4 +377,5 @@ adminRouter.delete(
 adminRouter.get("/admin-dashboard", verifyToken, adminDashboard);
 
 adminRouter.get("/get-user-name-list", verifyToken, getUSerNameList);
+adminRouter.get("/get-vendors-list", verifyToken, getVendorsAdminList);
 export default adminRouter;
