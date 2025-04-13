@@ -31,6 +31,7 @@ import {
   deleteFromCart,
   deleteFromWishlist,
   getCart,
+  getProductNameList,
   getWishlist,
 } from "../controllers/productController.js";
 
@@ -56,22 +57,22 @@ commonRouter.get("/personal-stats", verifyToken, getStats);
 commonRouter.get("/workout-stats", verifyToken, getDailyStats);
 commonRouter.get("/workout-plan-id", verifyToken, async (req, res) => {
   const planId = await getOrCreateWorkoutPlan(req.userId);
- 
+
   res.send(planId);
 });
 commonRouter.get("/diet-plan-id", verifyToken, async (req, res) => {
   const planId = await getOrCreateDietPlan(req.userId);
-  
+
   res.send(planId);
 });
 commonRouter.get("/get-daily-progress-id", verifyToken, async (req, res) => {
   const dailyProgress = await getOrCreateDailyProgress(req.userId);
-  
+
   res.send(dailyProgress);
 });
 commonRouter.get("/calories", verifyToken, async (req, res) => {
   const calories = await calculateCalories(req.userId);
- 
+
   res.send(calories);
 });
 commonRouter.get(
@@ -94,5 +95,5 @@ commonRouter.delete(
   verifyToken,
   deleteFromCart
 );
-
+commonRouter.get("/get-product-name-list", verifyToken, getProductNameList);
 export default commonRouter;

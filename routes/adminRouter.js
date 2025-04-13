@@ -54,9 +54,13 @@ import {
   viewProductsByUser,
 } from "../controllers/productController.js";
 import {
-  createOrder,
-  deleteOrder,
-  updateOrder,
+  createOrderItem,
+  deleteOrderItem,
+  deleteOrders,
+  getAllOrderItems,
+  readOrderItem,
+  updateOrderItem,
+  updateOrders,
   viewAllOrders,
   viewOrder,
   viewUserOrders,
@@ -354,25 +358,59 @@ adminRouter.get(
   checkPermissions(["VIEW_ORDERS"]),
   viewOrder
 );
-adminRouter.post(
-  "/create-order",
-  verifyToken,
-  checkPermissions(["CREATE_ORDER"]),
-  createOrder
-);
+// adminRouter.post(
+//   "/create-order",
+//   verifyToken,
+//   checkPermissions(["CREATE_ORDER"]),
+//   createOrder
+// );
 
 adminRouter.put(
   "/update-order/:id",
   verifyToken,
   checkPermissions(["MODIFY_ORDER"]),
-  updateOrder
+  updateOrders
 );
 adminRouter.delete(
   "/delete-order/:id",
   verifyToken,
   checkPermissions(["DELETE_ORDER"]),
-  deleteOrder
+  deleteOrders
 );
+
+//order items
+adminRouter.post(
+  "/create-order-item",
+  verifyToken,
+  checkPermissions(["CREATE_ORDER"]),
+  createOrderItem
+);
+adminRouter.put(
+  "/update-order-item/:id",
+  verifyToken,
+  checkPermissions(["MODIFY_ORDER"]),
+  updateOrderItem
+);
+adminRouter.delete(
+  "/delete-order-item/:id",
+  verifyToken,
+  checkPermissions(["DELETE_ORDER"]),
+  deleteOrderItem
+);
+adminRouter.get(
+  "/get-order-item/:id",
+  verifyToken,
+  checkPermissions(["VIEW_ORDERS"]),
+  readOrderItem
+);
+
+adminRouter.get(
+  "/get-all-order-items/:id",
+  verifyToken,
+  checkPermissions(["VIEW_ORDERS"]),
+  getAllOrderItems
+);
+
 //dashboard
 adminRouter.get("/admin-dashboard", verifyToken, adminDashboard);
 

@@ -366,7 +366,7 @@ export const addToWishlist = async (req, res) => {
 
 // Get all items in the Wishlist
 export const getWishlist = async (req, res) => {
-  const  userId  = req.userId; // Assume the user ID comes from the authenticated session or JWT
+  const userId = req.userId; // Assume the user ID comes from the authenticated session or JWT
 
   try {
     // Get all wishlist items for the user
@@ -455,5 +455,32 @@ export const deleteFromCart = async (req, res) => {
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const getProductNameList = async (req, res) => {
+  try {
+    if (!req.userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+    const products = await prisma.product.findMany({
+      select: {
+        id: true,
+        name: true,
+        price: true,
+      },
+    });
+    return res.status(200).json({
+      success: true,
+      products,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
