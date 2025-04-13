@@ -288,3 +288,226 @@ export const viewAllOrders = async (req, res) => {
     });
   }
 };
+//new Approach
+
+async function recalculateOrderTotal(orderId) {
+  const items = await prisma.orderItem.findMany({
+    where: { order_id: orderId },
+  });
+
+  const total = items.reduce((sum, item) => {
+    return sum + item.price.toNumber() * item.quantity;
+  }, 0);
+
+  await prisma.order.update({
+    where: { id: orderId },
+    data: { total_price: total },
+  });
+}
+
+export const createOrderItemSchema = z.object({
+  order_id: z.number(),
+  product_id: z.number(),
+  quantity: z.number().min(1),
+  price: z.number().min(0),
+  user_id: z.number(),
+});
+
+export const updateOrderItemSchema = createOrderItemSchema.partial();
+export const updateOrderSchemas = z.object({
+  status: z.enum(["PENDING", "COMPLETED", "CANCELLED"]),
+});
+
+// Create
+export const createOrderItem = async (req, res) => {
+  const { body } = req;
+
+  try {
+    const parsedBody = createOrderItemSchema.parse(body);
+
+    // Check if the order exists and belongs to the user
+    const order = await prisma.order.findFirst({
+      where: { id: parsedBody.order_id, user_id: parsedBody.user_id },
+    });
+
+    if (!order) {
+      return res.status(403).json({
+        success: false,
+        message: "Order does not belong to user or does not exist",
+      });
+    }
+
+    const orderItem = await prisma.orderItem.create({
+      data: parsedBody,
+    });
+
+    await recalculateOrderTotal(parsedBody.order_id);
+
+    return res.status(201).json({
+      success: true,
+      message: "Order Item created successfully",
+      orderItem,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+// Read
+export const readOrderItem = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const orderItem = await prisma.orderItem.findUnique({
+      where: { id: Number(id) },
+    });
+
+    if (!orderItem) {
+      return res.status(404).json({
+        success: false,
+        message: "Order Item not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      orderItem,
+    });
+  } catch (error) {
+    return res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+// Update
+export const updateOrderItem = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const parsedBody = updateOrderItemSchema.parse(req.body);
+
+    const existing = await prisma.orderItem.findUnique({
+      where: { id: Number(id) },
+    });
+
+    if (!existing) {
+      return res.status(404).json({
+        success: false,
+        message: "Order Item not found",
+      });
+    }
+
+    const updated = await prisma.orderItem.update({
+      where: { id: Number(id) },
+      data: parsedBody,
+    });
+
+    await recalculateOrderTotal(existing.order_id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Order Item updated successfully",
+      orderItem: updated,
+    });
+  } catch (error) {
+    return res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+// Delete
+export const deleteOrderItem = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const existing = await prisma.orderItem.findUnique({
+      where: { id: Number(id) },
+    });
+
+    if (!existing) {
+      return res.status(404).json({
+        success: false,
+        message: "Order Item not found",
+      });
+    }
+
+    await prisma.orderItem.delete({ where: { id: Number(id) } });
+    await recalculateOrderTotal(existing.order_id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Order Item deleted successfully",
+    });
+  } catch (error) {
+    return res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+//order Controller
+
+// Read
+export const readOrder = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const order = await prisma.order.findUnique({
+      where: { id: Number(id) },
+      include: { items: true },
+    });
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      order,
+    });
+  } catch (error) {
+    return res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+// Update (only status allowed here as per common pattern)
+export const updateOrders = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const parsedBody = updateOrderSchemas.parse(req.body);
+
+    const updated = await prisma.order.update({
+      where: { id: Number(id) },
+      data: parsedBody,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Order updated successfully",
+      order: updated,
+    });
+  } catch (error) {
+    return res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+// Delete (including cascade order items)
+export const deleteOrders = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const orderId = Number(id);
+
+    await prisma.orderItem.deleteMany({ where: { order_id: orderId } });
+    await prisma.order.delete({ where: { id: orderId } });
+
+    return res.status(200).json({
+      success: true,
+      message: "Order and its items deleted successfully",
+    });
+  } catch (error) {
+    return res.status(400).json({ success: false, message: error.message });
+  }
+};
