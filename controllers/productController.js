@@ -311,13 +311,22 @@ export const getCart = async (req, res) => {
       where: {
         user_id: req.userId,
       },
-      include: {
-        product: true, // Include related product details here
+      select: {
+        id: true,
+        product_id: true,
+        quantity: true,
+        product: {
+          select: {
+            name: true,
+            image_url: true,
+            price: true,
+          },
+        },
       },
     });
 
     if (cartItems.length === 0) {
-      return res.status(404).json({ message: "No items found in cart" });
+      return res.status(200).json({ message: "No items found in cart" });
     }
 
     return res.status(200).json({
@@ -380,7 +389,10 @@ export const getWishlist = async (req, res) => {
     });
 
     if (wishlistItems.length === 0) {
-      return res.status(404).json({ message: "No items found in wishlist" });
+      return res.status(200).json({
+        message: "No items found in wishlist",
+        data: [],
+      });
     }
 
     return res.status(200).json({

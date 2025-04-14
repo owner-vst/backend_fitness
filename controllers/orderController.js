@@ -237,10 +237,15 @@ export const viewUserOrders = async (req, res) => {
   try {
     const orders = await prisma.order.findMany({
       where: { user_id: parseInt(user_id) },
-      include: {
-        items: {
-          include: {
-            product: true, // Include product details for each order item
+      select: {
+        id: true,
+        status: true,
+        total_price: true,
+        created_at: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
           },
         },
       },
@@ -252,10 +257,19 @@ export const viewUserOrders = async (req, res) => {
         message: "No orders found for this user",
       });
     }
-
+    const formattedData = orders.map((order) => {
+      return {
+        id: order.id,
+        status: order.status,
+        total_price: order.total_price,
+        created_at: order.created_at,
+        user_id: order.user.id,
+        name: order.user.name,
+      };
+    });
     return res.status(200).json({
       success: true,
-      orders,
+      formattedData,
     });
   } catch (error) {
     return res.status(400).json({
@@ -382,8 +396,8 @@ export const updateOrderItem = async (req, res) => {
 
   try {
     const parsedBody = updateOrderItemSchema.parse(req.body.data);
-console.log("parsedBody",parsedBody)
-console.log("body",req.body)
+    console.log("parsedBody", parsedBody);
+    console.log("body", req.body);
     const existing = await prisma.orderItem.findUnique({
       where: { id: Number(id) },
     });
