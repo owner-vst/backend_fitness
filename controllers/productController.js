@@ -484,3 +484,201 @@ export const getProductNameList = async (req, res) => {
     });
   }
 };
+
+// export const getProducts = async (req, res) => {
+//   try {
+//     const { search, category, stock, minPrice, maxPrice } = req.query;
+
+//     // Define the where clause based on query params
+//     const whereClause = {
+//       status: "ACTIVE", // Always active products
+//       ...(search && {
+//         name: {
+//           contains: search, // Use contains for partial matching
+//         },
+//       }),
+//       ...(category && { category }), // If category is provided, filter by category
+//       ...(stock === "IN_STOCK"
+//         ? { stock: { gt: 0 } } // Products with stock > 0 (in stock)
+//         : stock === "OUT_OF_STOCK"
+//         ? { stock: 0 } // Products with stock == 0 (out of stock)
+//         : {}), // No filter for stock if none of these
+//       ...(minPrice &&
+//         maxPrice && {
+//           price: {
+//             gte: Number(minPrice), // Price range from minPrice to maxPrice
+//             lte: Number(maxPrice),
+//           },
+//         }),
+//     };
+
+//     // Query the database with the dynamically built where clause
+//     const products = await prisma.product.findMany({
+//       where: whereClause,
+//       select: {
+//         id: true,
+//         name: true,
+//         price: true,
+//         stock: true,
+//         category: true,
+//         image_url: true,
+//         status: true,
+//       },
+//     });
+
+//     // If no products match, return a 404
+//     if (products.length === 0) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "No products found for this filter",
+//       });
+//     }
+
+//     // Return products with a success message
+//     return res.status(200).json({
+//       success: true,
+//       products,
+//     });
+//   } catch (error) {
+//     return res.status(400).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
+export const getProducts = async (req, res) => {
+  try {
+    const { search, category, stock, minPrice, maxPrice } = req.query;
+
+    // Build the where clause based on query parameters
+    const whereClause = {
+      status: "ACTIVE", // Only active products
+      ...(search && {
+        name: {
+          contains: search, // Case-insensitive search
+        },
+      }),
+      ...(category && { category }), // Filter by category
+      ...(stock === "IN_STOCK"
+        ? { stock: { gt: 0 } } // Products with stock greater than 0
+        : stock === "OUT_OF_STOCK"
+        ? { stock: 0 } // Products with no stock
+        : {}), // If no stock filter, don't apply any
+      ...(minPrice &&
+        maxPrice && {
+          price: {
+            gte: Number(minPrice), // Minimum price filter
+            lte: Number(maxPrice), // Maximum price filter
+          },
+        }),
+    };
+
+    // Query the database with the dynamically built where clause
+    const products = await prisma.product.findMany({
+      where: whereClause,
+      select: {
+        id: true,
+        name: true,
+        price: true,
+        stock: true,
+        category: true,
+        image_url: true,
+        status: true,
+      },
+    });
+
+    // If no products are found, return a message with success = true
+    if (products.length === 0) {
+      return res.status(200).json({
+        success: true, // Keep success true to indicate the request was successful
+        message: "No products found matching your criteria.", // Custom message for no products
+        products: [], // Return an empty array for the products
+      });
+    }
+
+    // If products are found, return them in the response
+    return res.status(200).json({
+      success: true,
+      products,
+    });
+  } catch (error) {
+    // Catch any other errors and return a failure response
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const getProductById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const product = await prisma.product.findUnique({
+      where: { id: parseInt(id) },
+    });
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    } else {
+      return res.status(200).json({
+        success: true,
+        message: "Product found",
+        product,
+      });
+    }
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const getRelatedProducts = async (req, res) => {
+  try {
+    const { category } = req.query;
+
+    if (!category) {
+      return res.status(400).json({
+        success: false,
+        message: "Category is required",
+      });
+    }
+
+    const products = await prisma.product.findMany({
+      where: {
+        category: category,
+        status: "ACTIVE", // Optional: only fetch active products
+      },
+      take: 5, // Limit to 5 products
+      select: {
+        id: true,
+        name: true,
+        price: true,
+        image_url: true,
+        category: true,
+        stock: true,
+      },
+    });
+
+    if (products.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No related products found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Related products fetched",
+      products,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

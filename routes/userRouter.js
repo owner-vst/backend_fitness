@@ -17,6 +17,7 @@ import {
   vendorDashboard,
 } from "../controllers/userController.js";
 import { getWeeklyProgressStats } from "../controllers/DietStatsController.js";
+import { getProductById, getProducts, getRelatedProducts } from "../controllers/productController.js";
 
 const userRouter = express.Router();
 
@@ -71,4 +72,8 @@ userRouter.get("/get-weekly-diet-stats", verifyToken, getWeeklyProgressStats);
 userRouter.get("/get-activities", verifyToken, getActivities);
 userRouter.get("/get-user-dashboard", verifyToken, userDashboard);
 userRouter.get("/get-vendor-dashboard", verifyToken, vendorDashboard);
+
+userRouter.get("/get-products", verifyToken, getProducts);
+userRouter.get("/get-product-by-id/:id", verifyToken, getProductById);
+userRouter.get("/get-related-products", verifyToken, getRelatedProducts);
 export default userRouter;

@@ -102,26 +102,44 @@
 import prisma from "../db/prismaClient.js";
 
 // Helper function to get the start of the current week (Monday) in UTC
+// const getStartOfWeek = () => {
+//   const today = new Date();
+//   const dayOfWeek = today.getDay();
+//   // Adjust for Monday start (0: Sunday, 1: Monday, ..., 6: Saturday)
+//   const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Get Monday's date
+//   const startOfWeek = new Date(today);
+//   startOfWeek.setDate(diff);
+//   startOfWeek.setHours(0, 0, 0, 0); // Set to midnight
+//   return startOfWeek;
+// };
+
+// // Helper function to get the end of the current week (Sunday) in UTC
+// const getEndOfWeek = () => {
+//   const startOfWeek = getStartOfWeek();
+//   const endOfWeek = new Date(startOfWeek);
+//   endOfWeek.setDate(startOfWeek.getDate() + 6); // Sunday is 6 days after Monday
+//   endOfWeek.setHours(23, 59, 59, 999); // Set to 11:59:59 PM
+//   return endOfWeek;
+// };
 const getStartOfWeek = () => {
-  const today = new Date();
-  const dayOfWeek = today.getDay();
-  // Adjust for Monday start (0: Sunday, 1: Monday, ..., 6: Saturday)
-  const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Get Monday's date
-  const startOfWeek = new Date(today);
-  startOfWeek.setDate(diff);
-  startOfWeek.setHours(0, 0, 0, 0); // Set to midnight
+  const now = new Date();
+  const dayOfWeek = now.getUTCDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  const diff = now.getUTCDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Adjust so Monday is start
+  const startOfWeek = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), diff)
+  );
+  startOfWeek.setUTCHours(0, 0, 0, 0);
   return startOfWeek;
 };
 
-// Helper function to get the end of the current week (Sunday) in UTC
+// Get Sunday of the current week in UTC
 const getEndOfWeek = () => {
   const startOfWeek = getStartOfWeek();
   const endOfWeek = new Date(startOfWeek);
-  endOfWeek.setDate(startOfWeek.getDate() + 6); // Sunday is 6 days after Monday
-  endOfWeek.setHours(23, 59, 59, 999); // Set to 11:59:59 PM
+  endOfWeek.setUTCDate(endOfWeek.getUTCDate() + 6);
+  endOfWeek.setUTCHours(23, 59, 59, 999);
   return endOfWeek;
 };
-
 // Function to fetch weekly progress stats for carbs, protein, and fats
 export const getWeeklyProgressStats = async (req, res) => {
   const user_id = req.userId; // Get user_id from the authenticated user
@@ -148,7 +166,7 @@ export const getWeeklyProgressStats = async (req, res) => {
         user_id: parseInt(user_id),
         date: {
           gte: startDate, // Greater than or equal to start of the week
-          lte: endDate,   // Less than or equal to end of the week
+          lte: endDate, // Less than or equal to end of the week
         },
       },
     });
@@ -168,7 +186,7 @@ export const getWeeklyProgressStats = async (req, res) => {
       const dayOfWeek = date.getDay(); // Get the day of the week (0: Sunday, 1: Monday, ..., 6: Saturday)
 
       // Adjust the day index to start from Monday (0 = Monday, ..., 6 = Sunday)
-      const adjustedDayOfWeek = (dayOfWeek === 0 ? 6 : dayOfWeek - 1);
+      const adjustedDayOfWeek = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
 
       // Add the values to the respective day of the week
       weeklyStats.carbs[adjustedDayOfWeek] += item.carbs_intake;
