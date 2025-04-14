@@ -580,3 +580,73 @@ export const deleteOrders = async (req, res) => {
     return res.status(400).json({ success: false, message: error.message });
   }
 };
+
+const createOrderSchema = z.object({
+  total_price: z.number().positive("Total price must be positive"),
+  items: z.array(
+    z.object({
+      product_id: z.number().min(1, "Product ID is required"),
+      quantity: z.number().min(1, "Quantity must be at least 1"),
+    })
+  ),
+});
+
+export const createOrder = async (req, res) => {
+  const { body } = req;
+
+  try {
+    // Validate the request body
+    const parsedBody = createOrderSchema.parse(body);
+
+    // Prepare the order items with prices
+    const orderItems = await Promise.all(
+      parsedBody.items.map(async (item) => {
+        const product = await prisma.product.findUnique({
+          where: { id: item.product_id },
+          select: { price: true }, // Get only the price of the product
+        });
+
+        if (!product) {
+          throw new Error(`Product with ID ${item.product_id} not found`);
+        }
+
+        return {
+          product_id: item.product_id,
+          quantity: item.quantity,
+          price: new Decimal(product.price), // Store the price at the time of the order
+        };
+      })
+    );
+
+    // Calculate the total price
+    const totalPrice = orderItems.reduce(
+      (acc, item) => acc + item.price.toNumber() * item.quantity,
+      0
+    );
+
+    // Create the order with items
+    const order = await prisma.order.create({
+      data: {
+        user_id: req.userId,
+        total_price: new Decimal(totalPrice),
+        status: "PENDING", // Default status is PENDING
+        created_at: new Date(),
+        updated_at: new Date(),
+        items: {
+          create: orderItems, // Create the order items with the price at the time of the order
+        },
+      },
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Order created successfully",
+      order,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

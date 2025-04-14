@@ -23,6 +23,7 @@ import {
   getRelatedProducts,
 } from "../controllers/productController.js";
 import {
+  createOrder,
   getAllOrderItems,
   viewUserOrders,
 } from "../controllers/orderController.js";
@@ -96,4 +97,5 @@ userRouter.get(
 
   getAllOrderItems
 );
+userRouter.post("/create-order", verifyToken, createOrder);
 export default userRouter;
