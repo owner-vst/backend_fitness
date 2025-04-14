@@ -1191,3 +1191,22 @@ export const vendorDashboard = async (req, res) => {
     return res.status(400).json({ success: false, message: error.message });
   }
 };
+
+export const suggestProducts = async (req, res) => {
+  try {
+    const suggestedProducts = await prisma.$queryRaw`
+      SELECT id, name, image_url, price
+      FROM Product
+      ORDER BY RAND()
+      LIMIT 4;
+    `;
+
+    return res.status(200).json({
+      success: true,
+      suggestedProducts,
+    });
+  } catch (error) {
+    console.error("Suggest products error:", error);
+    return res.status(400).json({ success: false, message: error.message });
+  }
+};

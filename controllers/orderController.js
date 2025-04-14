@@ -582,7 +582,7 @@ export const deleteOrders = async (req, res) => {
 };
 
 const createOrderSchema = z.object({
-  total_price: z.number().positive("Total price must be positive"),
+  // total_price: z.number().positive("Total price must be positive"),
   items: z.array(
     z.object({
       product_id: z.number().min(1, "Product ID is required"),

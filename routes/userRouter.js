@@ -11,6 +11,7 @@ import {
   getFoodCatalogue,
   getUserDietPlanItems,
   getUserWorkoutPlanItems,
+  suggestProducts,
   updateUserDietPlanItem,
   updateUserWorkoutPlanItems,
   userDashboard,
@@ -98,4 +99,5 @@ userRouter.get(
   getAllOrderItems
 );
 userRouter.post("/create-order", verifyToken, createOrder);
+userRouter.get("/suggest-products", verifyToken, suggestProducts);
 export default userRouter;
