@@ -1,12 +1,16 @@
 import express from "express";
 import { checkPermissions, verifyToken } from "../middlewares/verifyToken.js";
 import {
+  adminCreateUsers,
   adminDashboard,
+  adminModifyUsers,
   createUsers,
   deleteUser,
+  demodeleteUser,
   getUserById,
   getUSerNameList,
   getUsers,
+  getUsersDetails,
   getVendorsAdminList,
   modifyUser,
 } from "../controllers/adminController.js";
@@ -54,6 +58,7 @@ import {
   viewProductsByUser,
 } from "../controllers/productController.js";
 import {
+  adminUpdateOrder,
   createOrderItem,
   deleteOrderItem,
   deleteOrders,
@@ -416,4 +421,10 @@ adminRouter.get("/admin-dashboard", verifyToken, adminDashboard);
 
 adminRouter.get("/get-user-name-list", verifyToken, getUSerNameList);
 adminRouter.get("/get-vendors-list", verifyToken, getVendorsAdminList);
+
+adminRouter.post("/create-user-details", verifyToken, adminCreateUsers);
+adminRouter.put("/modify-user-details/:userId", verifyToken, adminModifyUsers);
+adminRouter.get("/get-user-details",verifyToken,getUsersDetails)
+adminRouter.delete("/demodelete",verifyToken,demodeleteUser)
+adminRouter.put("/update-order/:id",verifyToken,adminUpdateOrder)
 export default adminRouter;

@@ -248,6 +248,11 @@ model Order {
   status      OrderStatus @default(PENDING)
   created_at  DateTime  @default(now())
   updated_at  DateTime  @default(now())
+  first_name   String?     
+  last_name    String?     
+  email        String?     
+  phone        String?     
+  address      String?     
   user        User      @relation(fields: [user_id], references: [id])
   items       OrderItem[]
 }

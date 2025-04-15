@@ -293,6 +293,11 @@ export const viewAllOrders = async (req, res) => {
             name: true,
           },
         },
+        first_name: true,
+        last_name: true,
+        email: true,
+        phone: true,
+        address: true,
       },
     });
     const formattedData = orders.map((order) => {
@@ -303,6 +308,11 @@ export const viewAllOrders = async (req, res) => {
         created_at: order.created_at,
         user_id: order.user.id,
         name: order.user.name,
+        firstname: order.first_name,
+        lastname: order.last_name,
+        email: order.email,
+        phone: order.phone,
+        address: order.address,
       };
     });
     return res.status(200).json({
@@ -582,6 +592,11 @@ export const deleteOrders = async (req, res) => {
 
 const createOrderSchema = z.object({
   // total_price: z.number().positive("Total price must be positive"),
+  first_name: z.string().min(1),
+  last_name: z.string().min(1),
+  email: z.string().email(),
+  phone: z.string().min(10).max(15),
+  address: z.string().min(5),
   items: z.array(
     z.object({
       product_id: z.number().min(1, "Product ID is required"),
@@ -596,7 +611,7 @@ export const createOrder = async (req, res) => {
   try {
     // Validate the request body
     const parsedBody = createOrderSchema.parse(body);
-
+    console.log(parsedBody);
     // Prepare the order items with prices
     const orderItems = await Promise.all(
       parsedBody.items.map(async (item) => {
@@ -631,12 +646,16 @@ export const createOrder = async (req, res) => {
         status: "PENDING", // Default status is PENDING
         created_at: new Date(),
         updated_at: new Date(),
+        first_name: parsedBody.first_name,
+        last_name: parsedBody.last_name,
+        email: parsedBody.email,
+        phone: parsedBody.phone,
+        address: parsedBody.address,
         items: {
           create: orderItems, // Create the order items with the price at the time of the order
         },
       },
     });
-    
 
     return res.status(201).json({
       success: true,
@@ -647,6 +666,71 @@ export const createOrder = async (req, res) => {
     return res.status(400).json({
       success: false,
       message: error.message,
+    });
+  }
+};
+
+const updateOrderSchema = z.object({
+  order_id: z.number(),
+  first_name: z.string().min(1).optional(),
+  last_name: z.string().min(1).optional(),
+  email: z.string().email().optional(),
+  phone: z.string().min(10).max(15).optional(),
+  address: z.string().min(5).optional(),
+  status: z.enum(["PENDING", "DELIVERED", "CANCELLED"]).optional(), // Adjust enums as per your schema
+});
+
+export const adminUpdateOrder = async (req, res) => {
+  try {
+    // Validate incoming request
+    const orders_id = req.params;
+    const parsed = updateOrderSchema.parse(req.body);
+    const { order_id, ...updateData } = parsed;
+
+    // Check if there's at least one field to update
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No fields provided for update",
+      });
+    }
+
+    // Check if order exists
+    const existingOrder = await prisma.order.findUnique({
+      where: { id: orders_id },
+    });
+
+    if (!existingOrder) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    // Perform the update
+    const updatedOrder = await prisma.order.update({
+      where: { id: order_id },
+      data: updateData,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Order updated successfully",
+      order: updatedOrder,
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(422).json({
+        success: false,
+        message: "Validation failed",
+        errors: error.errors,
+      });
+    }
+
+    console.error("Error updating order:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
     });
   }
 };

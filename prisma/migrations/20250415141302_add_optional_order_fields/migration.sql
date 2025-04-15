@@ -1,0 +1,6 @@
+-- AlterTable
+ALTER TABLE `Order` ADD COLUMN `address` VARCHAR(191) NULL,
+    ADD COLUMN `email` VARCHAR(191) NULL,
+    ADD COLUMN `first_name` VARCHAR(191) NULL,
+    ADD COLUMN `last_name` VARCHAR(191) NULL,
+    ADD COLUMN `phone` VARCHAR(191) NULL;
