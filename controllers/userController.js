@@ -1262,3 +1262,24 @@ export const markNotificationsAsRead = async (req, res) => {
     });
   }
 };
+
+export const userProfilePic = async (req, res) => {
+  const userId = req.userId;
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { profilePic: true },
+    });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User profile not found" });
+    }
+    return res.status(200).json({
+      success: true,
+      profilePic: user.profilePic,
+    });
+  } catch (error) {
+    return res.status(400).json({ success: false, message: error.message });
+  }
+};

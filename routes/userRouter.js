@@ -17,6 +17,7 @@ import {
   updateUserDietPlanItem,
   updateUserWorkoutPlanItems,
   userDashboard,
+  userProfilePic,
   vendorDashboard,
 } from "../controllers/userController.js";
 import { getWeeklyProgressStats } from "../controllers/DietStatsController.js";
@@ -108,4 +109,5 @@ userRouter.put(
   verifyToken,
   markNotificationsAsRead
 );
+userRouter.get("/get-profilepic",verifyToken,userProfilePic);
 export default userRouter;
