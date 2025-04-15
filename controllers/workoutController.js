@@ -966,7 +966,12 @@ export const createMultipleWorkoutPlanItemsHelper = async (
       const workoutPlanItemsCreated = await prisma.workoutPlanItem.createMany({
         data: limitedWorkoutPlanItems,
       });
-
+      await prisma.notification.create({
+        data: {
+          user_id: userId,
+          message: "Workout Plan Items created successfully",
+        },
+      });
       // Return success message with created workout plan items
       return {
         success: true,

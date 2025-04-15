@@ -396,8 +396,7 @@ export const updateOrderItem = async (req, res) => {
 
   try {
     const parsedBody = updateOrderItemSchema.parse(req.body.data);
-    console.log("parsedBody", parsedBody);
-    console.log("body", req.body);
+
     const existing = await prisma.orderItem.findUnique({
       where: { id: Number(id) },
     });
@@ -637,6 +636,7 @@ export const createOrder = async (req, res) => {
         },
       },
     });
+    
 
     return res.status(201).json({
       success: true,

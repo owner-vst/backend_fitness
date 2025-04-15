@@ -10,7 +10,9 @@ import {
   getActivities,
   getFoodCatalogue,
   getUserDietPlanItems,
+  getUserNotifications,
   getUserWorkoutPlanItems,
+  markNotificationsAsRead,
   suggestProducts,
   updateUserDietPlanItem,
   updateUserWorkoutPlanItems,
@@ -100,4 +102,10 @@ userRouter.get(
 );
 userRouter.post("/create-order", verifyToken, createOrder);
 userRouter.get("/suggest-products", verifyToken, suggestProducts);
+userRouter.get("/get-user-notifications", verifyToken, getUserNotifications);
+userRouter.put(
+  "/mark-notifications-as-read",
+  verifyToken,
+  markNotificationsAsRead
+);
 export default userRouter;

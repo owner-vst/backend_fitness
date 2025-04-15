@@ -56,7 +56,7 @@ export const sendMessage = async (req, res) => {
       await prisma.notification.create({
         data: {
           user_id: parseInt(validatedData.receiver_id), // Parse receiver_id as an integer for the notification
-          message: `${currentUser.username} sent you a message`,
+          message: `${currentUser.first_name} sent you a message`,
         },
       });
     }

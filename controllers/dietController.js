@@ -1175,6 +1175,12 @@ export const createMultipleDietPlanItemsHelper = async (
       const dietPlanItemsCreated = await prisma.dietPlanItem.createMany({
         data: dietPlanItems,
       });
+      await prisma.notification.create({
+        data: {
+          user_id: userId,
+          message: "Diet Plan Items created successfully",
+        },
+      });
 
       // Return success message with created diet plan items
       return {

@@ -1210,3 +1210,55 @@ export const suggestProducts = async (req, res) => {
     return res.status(400).json({ success: false, message: error.message });
   }
 };
+
+export const getUserNotifications = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const notifications = await prisma.notification.findMany({
+      where: {
+        user_id: userId,
+        status: "UNREAD",
+      },
+      select: {
+        id: true,
+        user_id: true,
+        message: true,
+      },
+    });
+    return res.status(200).json({
+      success: true,
+      notifications,
+    });
+  } catch (error) {
+    console.error("Error fetching notifications:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error fetching notifications",
+    });
+  }
+};
+
+export const markNotificationsAsRead = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const notifications = await prisma.notification.updateMany({
+      where: {
+        user_id: userId,
+        status: "UNREAD",
+      },
+      data: {
+        status: "READ",
+      },
+    });
+    return res.status(200).json({
+      success: true,
+      notifications,
+    });
+  } catch (error) {
+    console.error("Error marking notifications as read:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error marking notifications as read",
+    });
+  }
+};
